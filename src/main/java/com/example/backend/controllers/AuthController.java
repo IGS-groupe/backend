@@ -37,6 +37,7 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    
     @PostMapping("/signin")
     public ResponseEntity<String> authenticateUser(@RequestBody LoginDto loginDto) {
         org.springframework.security.core.Authentication authentication = authenticationManager.authenticate(
