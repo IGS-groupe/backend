@@ -6,7 +6,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.example.backend.entity.Demande;
 import com.example.backend.entity.User;
+import com.example.backend.repository.DemandeRepository;
 import com.example.backend.repository.UserRepository;
 
 import lombok.AllArgsConstructor;
@@ -16,7 +18,8 @@ import lombok.AllArgsConstructor;
 public class UserServiceImpl implements UserService{
     
     private UserRepository userRepository;
-
+    private  DemandeRepository demandeRepository;
+    
     @Override
     public User createUser(User user) {
         return userRepository.save(user);
@@ -44,15 +47,19 @@ public class UserServiceImpl implements UserService{
     @Override
     public User updateUser(User user) {
         User existingUser = userRepository.findById(user.getId()).get();
-        existingUser.setName(user.getName());
+        existingUser.setFirstName(user.getFirstName());
+        existingUser.setLastName(user.getLastName());
         existingUser.setUsername(user.getUsername());
         existingUser.setEmail(user.getEmail());
+        existingUser.setGenre(user.getGenre());
         User updatedUser = userRepository.save(existingUser);
         return updatedUser;
     }
 
     @Override
     public void deleteUser(Long userId) {
+        List<Demande> demandes = demandeRepository.findAllByUserId(userId);
+        demandeRepository.deleteAll(demandes);
         userRepository.deleteById(userId);
     }
 }

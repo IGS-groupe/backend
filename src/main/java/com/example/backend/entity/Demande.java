@@ -1,6 +1,5 @@
 package com.example.backend.entity;
 
-import java.util.Set;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -36,5 +35,8 @@ public class Demande {
     @Column(name = "CommentairesInternes", columnDefinition = "TEXT")
     private String commentairesInternes;
     
+    @ManyToOne
+    @JoinColumn(name = "userId", nullable = false)
+    private User user;
     // Getters and setters
 }

@@ -8,8 +8,20 @@ public class DemandeDTO {
     private boolean unEchantillon;
     private String langueDuCertificat;
     private String commentairesInternes;
+    private Long userId;
 
-    // Getters and setters
+    public boolean getUnEchantillon() {
+        return this.unEchantillon;
+    }
+
+
+    public Long getUserId() {
+        return this.userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
     public String getDemandePour() {
         return demandePour;
     }
