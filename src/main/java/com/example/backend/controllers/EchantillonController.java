@@ -15,7 +15,6 @@ import com.example.backend.services.EchantillonService;
 import lombok.AllArgsConstructor;
 
 import java.util.List;
-import java.util.Optional;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -70,7 +69,7 @@ public class EchantillonController {
         return ResponseEntity.ok(echantillons);
     }
     @PutMapping("/{id}")
-    public ResponseEntity<Echantillon> UpdateEnchantillion(@PathVariable String id, @RequestBody EchantillonDTO echantillonDTO) {
+    public ResponseEntity<Echantillon> UpdateEnchantillion(@PathVariable Long id, @RequestBody EchantillonDTO echantillonDTO) {
         Echantillon echantillon = new Echantillon();
         echantillon.setGabarit(Gabarit.valueOf(echantillonDTO.getGabarit().toUpperCase()));
         echantillon.setTypeEchantillon(TypeEchantillon.valueOf(echantillonDTO.getTypeEchantillon().toUpperCase()));
@@ -82,8 +81,8 @@ public class EchantillonController {
         echantillon.setPriorite(Priorite.valueOf(echantillonDTO.getPriorite().toUpperCase()));
         echantillon.setCommentairesInternes(echantillonDTO.getCommentairesInternes());
         echantillon.setDemande(demandeService.getDemandeByDemandeId(echantillonDTO.getDemandeId()));
-        Echantillon savedEchantillon = echantillonService.updatedEnchantillion(null, echantillon);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedEchantillon);
+        Echantillon savedEchantillon = echantillonService.updatedEnchantillion(id, echantillon);
+        return ResponseEntity.ok(savedEchantillon);
     }
 
 }

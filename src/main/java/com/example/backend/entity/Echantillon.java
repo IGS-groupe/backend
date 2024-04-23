@@ -43,7 +43,7 @@ public class Echantillon {
     @Column(name = "CommentairesInternes")
     private String commentairesInternes;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "DemandeID")
     private Demande demande;    
     

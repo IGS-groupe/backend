@@ -24,7 +24,7 @@ public class Parameter {
     @Column(name = "Unit")
     private String unit;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "EchantillonID")
     private Echantillon echantillon;  
     

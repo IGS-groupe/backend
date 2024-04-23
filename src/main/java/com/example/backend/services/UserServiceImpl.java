@@ -2,6 +2,8 @@ package com.example.backend.services;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.example.backend.entity.User;
@@ -12,6 +14,7 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 public class UserServiceImpl implements UserService{
+    
     private UserRepository userRepository;
 
     @Override
@@ -24,12 +27,15 @@ public class UserServiceImpl implements UserService{
         Optional<User> optionalUser = userRepository.findById(userId);
         return optionalUser.get();
     }
-
     @Override
-    public User getUserByEmail(String email) {
-        Optional<User> optionalUser = userRepository.findByEmail(email);
-        return optionalUser.get();
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<User> user = userRepository.findByUsername(username);
+
+        user.orElseThrow(() -> new UsernameNotFoundException("Not found: " + username));
+
+        return user.map(MyUserDetails::new).get();
     }
+
     @Override
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -38,8 +44,8 @@ public class UserServiceImpl implements UserService{
     @Override
     public User updateUser(User user) {
         User existingUser = userRepository.findById(user.getId()).get();
-        existingUser.setNom(user.getNom());
-        existingUser.setPrenom(user.getPrenom());
+        existingUser.setName(user.getName());
+        existingUser.setUsername(user.getUsername());
         existingUser.setEmail(user.getEmail());
         User updatedUser = userRepository.save(existingUser);
         return updatedUser;

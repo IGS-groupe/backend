@@ -4,9 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.backend.dto.DemandeDTO;
 import com.example.backend.entity.Demande;
-import com.example.backend.entity.Langue;
 import com.example.backend.services.DemandeService;
 
 import java.util.List;

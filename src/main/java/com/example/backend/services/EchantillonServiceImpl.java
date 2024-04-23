@@ -5,10 +5,11 @@ package com.example.backend.services;
 import org.springframework.stereotype.Service;
 
 import com.example.backend.entity.Echantillon;
-import com.example.backend.entity.Gabarit;
+import com.example.backend.entity.Parameter;
 import com.example.backend.entity.Priorite;
-import com.example.backend.entity.TypeEchantillon;
+import com.example.backend.exception.EchantillonNotFoundException;
 import com.example.backend.repository.EchantillonRepository;
+import com.example.backend.repository.ParameterRepository;
 
 import lombok.AllArgsConstructor;
 
@@ -20,7 +21,8 @@ import java.util.Optional;
 public class EchantillonServiceImpl implements EchantillonService {
 
     private  EchantillonRepository echantillonRepository;
-
+    private ParameterRepository parameterRepository;
+    
     @Override
     public Echantillon saveEchantillon(Echantillon echantillon) {
         return echantillonRepository.save(echantillon);
@@ -36,9 +38,10 @@ public class EchantillonServiceImpl implements EchantillonService {
         return echantillonRepository.findByEchantillonId(id);
     }
 
-    
     @Override
     public void deleteEchantillon(Long id) {
+        List<Parameter> parameters = parameterRepository.findAllByEchantillonId(id);
+        parameterRepository.deleteAll(parameters);
         echantillonRepository.deleteById(id);
     }
 
@@ -48,23 +51,27 @@ public class EchantillonServiceImpl implements EchantillonService {
     }
     @Override
     public Echantillon updatedEnchantillion(Long id ,Echantillon echantillon) {
-    Echantillon existingenchantillion = echantillonRepository.findById(echantillon.getEchantillonId()).orElse(null);
-    if (existingenchantillion != null) {
-        echantillon.setGabarit(echantillon.getGabarit());
-        echantillon.setTypeEchantillon(echantillon.getTypeEchantillon());
-        echantillon.setNormeEchantillon(echantillon.getNormeEchantillon());
-        echantillon.setNomEchantillon(echantillon.getNomEchantillon());
-        echantillon.setLieuPrelevement(echantillon.getLieuPrelevement());
-        echantillon.setDateFinPrelevement(echantillon.getDateFinPrelevement());
-        echantillon.setHeureFinPrelevement(echantillon.getHeureFinPrelevement());
-        echantillon.setPriorite(echantillon.getPriorite());
-        echantillon.setCommentairesInternes(echantillon.getCommentairesInternes());
-        echantillon.setDemande(echantillon.getDemande());
-
-        return echantillonRepository.save(existingenchantillion);
+        Optional<Echantillon> optionalEchantillon = echantillonRepository.findById(id);
+        if (optionalEchantillon.isPresent()) {
+            Echantillon existingEchantillon = optionalEchantillon.get();
+            existingEchantillon.setGabarit(echantillon.getGabarit());
+            existingEchantillon.setTypeEchantillon(echantillon.getTypeEchantillon());
+            existingEchantillon.setNormeEchantillon(echantillon.getNormeEchantillon());
+            existingEchantillon.setNomEchantillon(echantillon.getNomEchantillon());
+            existingEchantillon.setLieuPrelevement(echantillon.getLieuPrelevement());
+            existingEchantillon.setDateFinPrelevement(echantillon.getDateFinPrelevement());
+            existingEchantillon.setHeureFinPrelevement(echantillon.getHeureFinPrelevement());
+            existingEchantillon.setPriorite(echantillon.getPriorite());
+            existingEchantillon.setCommentairesInternes(echantillon.getCommentairesInternes());
+            existingEchantillon.setDemande(echantillon.getDemande());
+            return echantillonRepository.save(existingEchantillon);
+        } else {
+            throw new EchantillonNotFoundException("Echantillon with ID " + id + " not found");
+        }
     }
-    return null; // Or throw an exception indicating the demande is not found
-}
-
+    @Override
+    public List<Echantillon> findAllByDemandeId(Long demandeId) {
+        return echantillonRepository.findAllByDemandeId(demandeId);
+    }
     
 }
