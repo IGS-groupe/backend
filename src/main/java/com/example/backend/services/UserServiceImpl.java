@@ -60,6 +60,10 @@ public class UserServiceImpl implements UserService{
     public void deleteUser(Long userId) {
         List<Demande> demandes = demandeRepository.findAllByUserId(userId);
         demandeRepository.deleteAll(demandes);
+        User user = userRepository.findById(userId)
+                              .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        user.getRoles().clear();
+        userRepository.save(user);
         userRepository.deleteById(userId);
     }
 }
