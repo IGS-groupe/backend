@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -110,7 +111,9 @@ public class AuthController {
                 user.setActive(true);
                 user.setActivationToken(null); // clear the token after activation
                 userRepository.save(user);
-                return ResponseEntity.ok("Account activated successfully");
+                HttpHeaders headers = new HttpHeaders();
+                headers.add("Location", "http://localhost:4200/account/login");
+                return new ResponseEntity<>(headers, HttpStatus.SEE_OTHER);
             } else {
                 return ResponseEntity.badRequest().body("Account is already activated");
             }
