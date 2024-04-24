@@ -14,7 +14,10 @@ import com.example.backend.services.EchantillonService;
 
 import lombok.AllArgsConstructor;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,7 +32,7 @@ public class EchantillonController {
     private final DemandeService demandeService;
 
     @PostMapping
-    public ResponseEntity<Echantillon> saveEchantillon(@RequestBody EchantillonDTO echantillonDTO) {
+    public ResponseEntity<?> saveEchantillon(@RequestBody EchantillonDTO echantillonDTO) {
         Echantillon echantillon = new Echantillon();
         echantillon.setGabarit(Gabarit.valueOf(echantillonDTO.getGabarit().toUpperCase()));
         echantillon.setTypeEchantillon(TypeEchantillon.valueOf(echantillonDTO.getTypeEchantillon().toUpperCase()));
@@ -41,8 +44,16 @@ public class EchantillonController {
         echantillon.setPriorite(Priorite.valueOf(echantillonDTO.getPriorite().toUpperCase()));
         echantillon.setCommentairesInternes(echantillonDTO.getCommentairesInternes());
         echantillon.setDemande(demandeService.getDemandeByDemandeId(echantillonDTO.getDemandeId()));
+
+        // Save the new echantillon
         Echantillon savedEchantillon = echantillonService.saveEchantillon(echantillon);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedEchantillon);
+
+        // Create a response with the ID of the newly created echantillon
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Echantillon created successfully!");
+        response.put("echantillonId", savedEchantillon.getEchantillonId()); // Return only the echantillon ID
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping

@@ -11,7 +11,9 @@ import com.example.backend.services.ParameterService;
 
 import lombok.AllArgsConstructor;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,14 +29,22 @@ public class ParameterController {
     private final EchantillonService echantillonService;
 
     @PostMapping
-    public ResponseEntity<Parameter> saveParameter(@RequestBody ParameterDTO parameterDTO) {
-    Parameter parameter = new Parameter();
-    parameter.setName(parameterDTO.getName());
-    parameter.setRdl(parameterDTO.getRdl());
-    parameter.setUnit(parameterDTO.getUnit());
-    parameter.setEchantillon(echantillonService.getEchantillonById(parameterDTO.getEchantillonId()));
-    Parameter savedParameter = parameterService.saveParameter(parameter);
-     return ResponseEntity.status(HttpStatus.CREATED).body(savedParameter);
+    public ResponseEntity<?> saveParameter(@RequestBody ParameterDTO parameterDTO) {
+        Parameter parameter = new Parameter();
+        parameter.setName(parameterDTO.getName());
+        parameter.setRdl(parameterDTO.getRdl());
+        parameter.setUnit(parameterDTO.getUnit());
+        parameter.setEchantillon(echantillonService.getEchantillonById(parameterDTO.getEchantillonId()));
+
+        // Save the new parameter
+        Parameter savedParameter = parameterService.saveParameter(parameter);
+
+        // Create a response with the ID of the newly created parameter
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Parameter created successfully!");
+
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
