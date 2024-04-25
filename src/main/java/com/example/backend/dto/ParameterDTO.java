@@ -6,7 +6,6 @@ public class ParameterDTO {
     private String name;
     private BigDecimal rdl;
     private String unit;
-    private Long echantillonId; // Add this field
 
     // Getters and setters
     public String getName() {
@@ -33,11 +32,4 @@ public class ParameterDTO {
         this.unit = unit;
     }
 
-    public Long getEchantillonId() {
-        return echantillonId;
-    }
-
-    public void setEchantillonId(Long echantillonId) {
-        this.echantillonId = echantillonId;
-    }
 }

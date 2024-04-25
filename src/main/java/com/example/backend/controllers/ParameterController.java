@@ -11,6 +11,7 @@ import com.example.backend.services.ParameterService;
 
 import lombok.AllArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,22 +30,19 @@ public class ParameterController {
     private final EchantillonService echantillonService;
 
     @PostMapping
-    public ResponseEntity<?> saveParameter(@RequestBody ParameterDTO parameterDTO) {
+    public ResponseEntity<?> saveParameters(@PathVariable Long id , @RequestBody List<ParameterDTO> analytesList) {
+    List<Parameter> savedParameters = new ArrayList<>();
+    for (ParameterDTO parameterDTO : analytesList) {
         Parameter parameter = new Parameter();
         parameter.setName(parameterDTO.getName());
         parameter.setRdl(parameterDTO.getRdl());
         parameter.setUnit(parameterDTO.getUnit());
-        parameter.setEchantillon(echantillonService.getEchantillonById(parameterDTO.getEchantillonId()));
-
-        // Save the new parameter
-        Parameter savedParameter = parameterService.saveParameter(parameter);
-
-        // Create a response with the ID of the newly created parameter
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Parameter created successfully!");
-
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        parameter.setEchantillon(echantillonService.getEchantillonById(id));
+        savedParameters.add(parameterService.saveParameter(parameter));
+    }
+    Map<String, Object> response = new HashMap<>();
+    response.put("message", String.format("%d parameters saved successfully!", savedParameters.size()));
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
@@ -65,14 +63,14 @@ public class ParameterController {
         return ResponseEntity.noContent().build();
     }
     @PutMapping("/{id}")
-    public ResponseEntity<Parameter> updateParameter(@PathVariable Long id, @RequestBody ParameterDTO parameterDTO) {
+    public ResponseEntity<Parameter> updateParameter(@PathVariable Long id ,@PathVariable Long paramaterId, @RequestBody ParameterDTO parameterDTO) {
     Optional<Parameter> optionalParameter = parameterService.getParameterById(id);
     if (optionalParameter.isPresent()) {
         Parameter parameter = optionalParameter.get();
         parameter.setName(parameterDTO.getName());
         parameter.setRdl(parameterDTO.getRdl());
         parameter.setUnit(parameterDTO.getUnit());
-        parameter.setEchantillon(echantillonService.getEchantillonById(parameterDTO.getEchantillonId()));
+        parameter.setEchantillon(echantillonService.getEchantillonById(paramaterId));
         Parameter updatedParameter = parameterService.updateParameter(id, parameter);
         return ResponseEntity.ok(updatedParameter);
     } else {
