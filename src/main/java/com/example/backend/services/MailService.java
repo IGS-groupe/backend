@@ -38,4 +38,26 @@ public class MailService {
 
         mailSender.send(message);
     }
+    
+    public void sendResetPasswordEmail(String toEmail, String userName, String resetToken) throws MessagingException {
+    MimeMessage message = mailSender.createMimeMessage();
+    MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+    helper.setFrom(fromMail);
+    helper.setTo(toEmail);
+    helper.setSubject("Réinitialisation de votre mot de passe pour IGS");
+
+    String resetUrl = "http://localhost:4200/account/updatePassword?token=" + resetToken; // Adjust the domain accordingly
+    String content = "<h1>Bonjour " + userName + ",</h1>" +
+                    "<p>Vous avez demandé la réinitialisation de votre mot de passe pour le compte associé à cet email.</p>" +
+                    "<p>Veuillez cliquer sur le lien ci-dessous pour réinitialiser votre mot de passe :</p>" +
+                    "<a href='" + resetUrl + "'>Réinitialiser mon mot de passe</a>" +
+                    "<p>Si vous n'avez pas demandé la réinitialisation, ignorez cet email.</p>" +
+                    "<p>Cordialement,</p>" +
+                    "<p>Équipe IGS</p>";
+
+    helper.setText(content, true);
+    mailSender.send(message);
+}
+
 }

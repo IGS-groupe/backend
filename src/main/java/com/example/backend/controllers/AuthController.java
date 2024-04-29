@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.backend.dto.LoginDto;
+import com.example.backend.dto.ResetPasswordDTO;
 import com.example.backend.dto.SignUpDto;
 import com.example.backend.entity.Role;
 import com.example.backend.entity.User;
@@ -55,7 +56,6 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginDto loginDto) {
-        // Authenticate the user
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginDto.getUsernameOrEmail(), loginDto.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -121,4 +121,35 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Invalid activation link");
         }
     }
+
+    @GetMapping("/request-reset-password")
+    public ResponseEntity<?> requestResetPassword(@RequestParam("email") String email) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return ResponseEntity.badRequest().body("User with this email does not exist.");
+        }
+        String resetToken = UUID.randomUUID().toString();
+        user.setResetToken(resetToken);
+        userRepository.save(user);
+        try {
+            mailService.sendResetPasswordEmail(user.getEmail(), user.getFirstName() + " " + user.getLastName(), resetToken);
+            return ResponseEntity.ok("Reset password link sent to your email.");
+        } catch (MessagingException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send reset password email");
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordDTO request) {
+        User user = userRepository.findByResetToken(request.getToken()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.badRequest().body("Invalid or expired reset token.");
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setResetToken(null); // Clear the token
+        userRepository.save(user);
+        
+        return ResponseEntity.ok("Password reset successfully.");
+    }
+
 }

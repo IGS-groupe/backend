@@ -29,6 +29,7 @@ public class User {
     private String genre;
     private boolean active = false;
     private String activationToken;
+    private String resetToken;
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(name = "user_roles",
         joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
