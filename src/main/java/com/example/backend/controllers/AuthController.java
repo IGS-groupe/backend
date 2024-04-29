@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.backend.config.JwtService;
 import com.example.backend.dto.LoginDto;
 import com.example.backend.dto.ResetPasswordDTO;
 import com.example.backend.dto.SignUpDto;
@@ -32,15 +34,15 @@ import com.example.backend.repository.UserRepository;
 import com.example.backend.services.MailService;
 import java.util.UUID;
 import jakarta.mail.MessagingException;
+import lombok.RequiredArgsConstructor;
 
 
-
+@Service
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     @Autowired
     private UserRepository userRepository;
@@ -54,19 +56,30 @@ public class AuthController {
     @Autowired
     private MailService mailService;
 
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginDto loginDto) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginDto.getUsernameOrEmail(), loginDto.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String usernameOrEmail = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
+        String usernameOrEmail = loginDto.getUsernameOrEmail();
+        // Find user by username or email
         User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElse(null);
-        
+        // Authenticate the user using the provided credentials
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), loginDto.getPassword()));
         if (user == null) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("message", "User not found."));
-        }
+            }
+        // Generate JWT token for the authenticated user
+        String jwtToken = jwtService.generateToken(user);
         Long userId = user.getId();
-        return ResponseEntity.ok(Collections.singletonMap("userId", userId));
+        // Return the authentication response with a custom message based on the user's role
+        Map<String, Object> response = new HashMap<>();
+            response.put("message","User registered successfully");
+            response.put("userId",userId);
+            response.put("token",jwtToken);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
     }
     
 
