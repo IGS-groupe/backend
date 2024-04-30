@@ -27,17 +27,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class ParameterController {
 
     private final ParameterService parameterService;
-    private final EchantillonService echantillonService;
 
     @PostMapping
-    public ResponseEntity<?> saveParameters(@PathVariable Long id , @RequestBody List<ParameterDTO> analytesList) {
+    public ResponseEntity<?> saveParameters( @RequestBody List<ParameterDTO> paramaters) {
     List<Parameter> savedParameters = new ArrayList<>();
-    for (ParameterDTO parameterDTO : analytesList) {
+    for (ParameterDTO parameterDTO : paramaters) {
         Parameter parameter = new Parameter();
         parameter.setName(parameterDTO.getName());
         parameter.setRdl(parameterDTO.getRdl());
         parameter.setUnit(parameterDTO.getUnit());
-        parameter.setEchantillon(echantillonService.getEchantillonById(id));
         savedParameters.add(parameterService.saveParameter(parameter));
     }
     Map<String, Object> response = new HashMap<>();
@@ -70,7 +68,6 @@ public class ParameterController {
         parameter.setName(parameterDTO.getName());
         parameter.setRdl(parameterDTO.getRdl());
         parameter.setUnit(parameterDTO.getUnit());
-        parameter.setEchantillon(echantillonService.getEchantillonById(paramaterId));
         Parameter updatedParameter = parameterService.updateParameter(id, parameter);
         return ResponseEntity.ok(updatedParameter);
     } else {

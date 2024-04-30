@@ -54,7 +54,15 @@ public class DemandeServiceImpl implements DemandeService {
             throw new DemandeNotFoundException("Demande with ID " + id + " not found");
         }
     }
-    
+    @Override
+    public void  updateState(Long demandeId , String etat){
+        Optional<Demande> optionalDemande = demandeRepository.findById(demandeId);
+        if (optionalDemande.isPresent()) {
+            Demande demande = optionalDemande.get();
+            demande.setEtat(etat);
+            demandeRepository.save(demande);
+        }
+    }
     @Override
     public List<Demande> findAllByUserId(Long userId)   {
         return demandeRepository.findAllByUserId(userId);

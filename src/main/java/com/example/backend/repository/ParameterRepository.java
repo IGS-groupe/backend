@@ -12,7 +12,5 @@ import com.example.backend.entity.Parameter;
 
 
 public interface ParameterRepository extends JpaRepository<Parameter, Long> {
-    @Query("SELECT p FROM Parameter p WHERE p.echantillon.echantillonId = :echantillonId")
-    List<Parameter> findAllByEchantillonId(@Param("echantillonId") Long echantillonId);
     Parameter findByParameterId(Long id);
 }

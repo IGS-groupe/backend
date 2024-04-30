@@ -28,6 +28,9 @@ public class Demande {
     @Column(name = "UnEchantillon")
     private boolean unEchantillon;
     
+    @Column(name = "Etat")
+    private String etat;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "LangueDuCertificat")
     private Langue langueDuCertificat;

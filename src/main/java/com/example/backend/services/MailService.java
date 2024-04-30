@@ -58,6 +58,41 @@ public class MailService {
 
     helper.setText(content, true);
     mailSender.send(message);
-}
+    }
+    public void sendStatusEmail(String toEmail, String status) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setFrom(fromMail);
+        helper.setTo(toEmail);
+        helper.setSubject("Status de votre demande - IGS");
+
+        String content = generateEmailContent( status);
+        helper.setText(content, true); // true to send HTML
+
+        mailSender.send(message);
+    }
+
+    private String generateEmailContent( String status) {
+        String content = "<h1>Bonjour  </h1>";
+
+        switch (status.toLowerCase()) {
+            case "bien reçu":
+                content += "<p>Votre échantillon a été <strong>bien reçu</strong>.</p>";
+                break;
+            case "refusé":
+                content += "<p>Malheureusement, votre échantillon a été <strong>refusé</strong>.</p>";
+                break;
+            default:
+                content += "<p>Il y a un problème inattendu avec votre échantillon. Veuillez nous contacter.</p>";
+                break;
+        }
+
+        content += "<p>Pour plus d'informations, veuillez visiter notre portail ou nous contacter directement.</p>";
+        content += "<p>Cordialement,</p>";
+        content += "<p>L'équipe IGS</p>";
+
+        return content;
+    }
 
 }

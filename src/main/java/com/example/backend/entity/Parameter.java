@@ -24,9 +24,6 @@ public class Parameter {
     @Column(name = "Unit")
     private String unit;
     
-    @ManyToOne
-    @JoinColumn(name = "EchantillonID")
-    private Echantillon echantillon;  
     
     // Getters and setters
 }

@@ -46,6 +46,11 @@ public class Echantillon {
     @ManyToOne
     @JoinColumn(name = "DemandeID")
     private Demande demande;    
-    
+
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(name = "echantillon_parameters",
+        joinColumns = @JoinColumn(name = "echantillon_id", referencedColumnName = "echantillonId"),
+        inverseJoinColumns = @JoinColumn(name = "parameter_id", referencedColumnName = "parameterId"))
+    private Set<Parameter> parameter;
     // Getters and setters
 }

@@ -46,15 +46,10 @@ public class ParameterServiceImpl implements ParameterService {
         existingParameter.setName(parameter.getName());
         existingParameter.setRdl(parameter.getRdl());
         existingParameter.setUnit(parameter.getUnit());
-        existingParameter.setEchantillon(parameter.getEchantillon());
         return parameterRepository.save(existingParameter);
     } else {
         throw new ParameterNotFoundException("Parameter with ID " + id + " not found");
         }
-    }
-    @Override
-    public List<Parameter> findAllByEchantillonId(Long id){
-        return parameterRepository.findAllByEchantillonId(id);
     }
 
     // Add more methods if needed

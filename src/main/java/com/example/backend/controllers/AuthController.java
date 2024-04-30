@@ -27,10 +27,12 @@ import com.example.backend.config.JwtService;
 import com.example.backend.dto.LoginDto;
 import com.example.backend.dto.ResetPasswordDTO;
 import com.example.backend.dto.SignUpDto;
+import com.example.backend.entity.Contact;
 import com.example.backend.entity.Role;
 import com.example.backend.entity.User;
 import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.services.ContactService;
 import com.example.backend.services.MailService;
 import java.util.UUID;
 import jakarta.mail.MessagingException;
@@ -56,6 +58,9 @@ public class AuthController {
     @Autowired
     private MailService mailService;
 
+    @Autowired
+    private ContactService contactService;
+    
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
@@ -165,4 +170,9 @@ public class AuthController {
         return ResponseEntity.ok("Password reset successfully.");
     }
 
+    @PostMapping("/contacts")
+    public ResponseEntity<Contact> createContact(@RequestBody Contact contact) {
+        Contact savedContact = contactService.saveContact(contact);
+        return ResponseEntity.ok(savedContact);
+    }
 }

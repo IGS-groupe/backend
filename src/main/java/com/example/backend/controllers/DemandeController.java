@@ -1,5 +1,6 @@
 package com.example.backend.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -8,7 +9,10 @@ import com.example.backend.dto.DemandeDTO;
 import com.example.backend.entity.Demande;
 import com.example.backend.entity.Langue;
 import com.example.backend.services.DemandeService;
+import com.example.backend.services.MailService;
 import com.example.backend.services.UserService;
+
+import jakarta.mail.MessagingException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +26,9 @@ import lombok.AllArgsConstructor;
 public class DemandeController {
     private final DemandeService demandeService;
     private UserService userService;
-    
+    @Autowired
+    private MailService mailService;
+
     @PostMapping
     public ResponseEntity<?> createDemande(@RequestBody DemandeDTO demandeDTO) {
         Demande demande = new Demande();
@@ -72,6 +78,23 @@ public class DemandeController {
         demande.setCommentairesInternes(demandeDTO.getCommentairesInternes());
         Demande updatedDemande = demandeService.updateDemande(id, demande);
         return ResponseEntity.ok(updatedDemande);
+    }
+
+    @PutMapping("/etat/{id}")
+    public ResponseEntity<?> updateState(@PathVariable Long id, @RequestBody String etat) {
+        demandeService.updateState(id, etat);
+        try {
+            Demande demande  = demandeService.getDemandeByDemandeId(id);
+            String email = demande.getCourrielsSupplementaires();
+            mailService.sendStatusEmail( email,  etat);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message","Demande update successfully");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (MessagingException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("User registered but failed to send activation email");
+        }
+        
+        
     }
 
     @DeleteMapping("/{id}")

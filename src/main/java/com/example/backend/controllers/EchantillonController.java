@@ -18,11 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PathVariable;
-
-
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/echantillons")
@@ -33,39 +28,31 @@ public class EchantillonController {
 
     @PostMapping
     public ResponseEntity<?> saveEchantillon(@RequestBody EchantillonDTO echantillonDTO) {
-        Echantillon echantillon = new Echantillon();
-        echantillon.setGabarit(Gabarit.valueOf(echantillonDTO.getGabarit().toUpperCase()));
-        echantillon.setTypeEchantillon(TypeEchantillon.valueOf(echantillonDTO.getTypeEchantillon().toUpperCase()));
-        echantillon.setNormeEchantillon(echantillonDTO.getNormeEchantillon());
-        echantillon.setNomEchantillon(echantillonDTO.getNomEchantillon());
-        echantillon.setLieuPrelevement(echantillonDTO.getLieuPrelevement());
-        echantillon.setDateFinPrelevement(echantillonDTO.getDateFinPrelevement());
-        echantillon.setHeureFinPrelevement(echantillonDTO.getHeureFinPrelevement());
-        echantillon.setPriorite(Priorite.valueOf(echantillonDTO.getPriorite().toUpperCase()));
-        echantillon.setCommentairesInternes(echantillonDTO.getCommentairesInternes());
-        echantillon.setDemande(demandeService.getDemandeByDemandeId(echantillonDTO.getDemandeId()));
-
-        // Save the new echantillon
-        Echantillon savedEchantillon = echantillonService.saveEchantillon(echantillon);
-
-        // Create a response with the ID of the newly created echantillon
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Echantillon created successfully!");
-        response.put("echantillonId", savedEchantillon.getEchantillonId()); // Return only the echantillon ID
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        try {
+            Echantillon echantillon = mapDtoToEntity(echantillonDTO);
+            Echantillon savedEchantillon = echantillonService.saveEchantillon(echantillon);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Echantillon created successfully!");
+            response.put("echantillonId", savedEchantillon.getEchantillonId());
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping
     public ResponseEntity<List<Echantillon>> getAllEchantillons() {
-        List<Echantillon> echantillons = echantillonService.getAllEchantillons();
-        return ResponseEntity.ok(echantillons);
+        return ResponseEntity.ok(echantillonService.getAllEchantillons());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Echantillon> getEchantillonById(@PathVariable Long id) {
-        Echantillon echantillon = echantillonService.getEchantillonById(id);
-        return ResponseEntity.ok(echantillon);
+    public ResponseEntity<?> getEchantillonById(@PathVariable Long id) {
+        try {
+            Echantillon echantillon = echantillonService.getEchantillonById(id);
+            return ResponseEntity.ok(echantillon);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -76,24 +63,31 @@ public class EchantillonController {
 
     @GetMapping("/priorite/{priorite}")
     public ResponseEntity<List<Echantillon>> getEchantillonsByPriorite(@PathVariable Priorite priorite) {
-        List<Echantillon> echantillons = echantillonService.getEchantillonsByPriorite(priorite);
-        return ResponseEntity.ok(echantillons);
-    }
-    @PutMapping("/{id}")
-    public ResponseEntity<Echantillon> UpdateEnchantillion(@PathVariable Long id, @RequestBody EchantillonDTO echantillonDTO) {
-        Echantillon echantillon = new Echantillon();
-        echantillon.setGabarit(Gabarit.valueOf(echantillonDTO.getGabarit().toUpperCase()));
-        echantillon.setTypeEchantillon(TypeEchantillon.valueOf(echantillonDTO.getTypeEchantillon().toUpperCase()));
-        echantillon.setNormeEchantillon(echantillonDTO.getNormeEchantillon());
-        echantillon.setNomEchantillon(echantillonDTO.getNomEchantillon());
-        echantillon.setLieuPrelevement(echantillonDTO.getLieuPrelevement());
-        echantillon.setDateFinPrelevement(echantillonDTO.getDateFinPrelevement());
-        echantillon.setHeureFinPrelevement(echantillonDTO.getHeureFinPrelevement());
-        echantillon.setPriorite(Priorite.valueOf(echantillonDTO.getPriorite().toUpperCase()));
-        echantillon.setCommentairesInternes(echantillonDTO.getCommentairesInternes());
-        echantillon.setDemande(demandeService.getDemandeByDemandeId(echantillonDTO.getDemandeId()));
-        Echantillon savedEchantillon = echantillonService.updatedEnchantillion(id, echantillon);
-        return ResponseEntity.ok(savedEchantillon);
+        return ResponseEntity.ok(echantillonService.getEchantillonsByPriorite(priorite));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateEchantillon(@PathVariable Long id, @RequestBody EchantillonDTO echantillonDTO) {
+        try {
+            Echantillon updatedEchantillon = echantillonService.updateEchantillon(id, mapDtoToEntity(echantillonDTO));
+            return ResponseEntity.ok(updatedEchantillon);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
+
+    private Echantillon mapDtoToEntity(EchantillonDTO dto) {
+        Echantillon echantillon = new Echantillon();
+        echantillon.setGabarit(Gabarit.valueOf(dto.getGabarit().toUpperCase()));
+        echantillon.setTypeEchantillon(TypeEchantillon.valueOf(dto.getTypeEchantillon().toUpperCase()));
+        echantillon.setNormeEchantillon(dto.getNormeEchantillon());
+        echantillon.setNomEchantillon(dto.getNomEchantillon());
+        echantillon.setLieuPrelevement(dto.getLieuPrelevement());
+        echantillon.setDateFinPrelevement(dto.getDateFinPrelevement());
+        echantillon.setHeureFinPrelevement(dto.getHeureFinPrelevement());
+        echantillon.setPriorite(Priorite.valueOf(dto.getPriorite().toUpperCase()));
+        echantillon.setCommentairesInternes(dto.getCommentairesInternes());
+        echantillon.setDemande(demandeService.getDemandeByDemandeId(dto.getDemandeId()));
+        return echantillon;
+    }
 }

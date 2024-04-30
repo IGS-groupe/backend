@@ -13,7 +13,7 @@ public interface EchantillonService {
     Echantillon getEchantillonById(Long id);
     Echantillon saveEchantillon(Echantillon echantillon);
     void deleteEchantillon(Long id);
-    Echantillon updatedEnchantillion(Long id ,Echantillon echantillon);
+    Echantillon updateEchantillon(Long id, Echantillon echantillon);
     List<Echantillon> getEchantillonsByPriorite(Priorite priorite);
     // Add more methods if needed
 }
