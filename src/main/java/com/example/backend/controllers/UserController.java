@@ -39,6 +39,15 @@ public class UserController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
+    @GetMapping("/role/user")
+    public List<User> getUsersWithUserRole() {
+        return userService.getUsersByRole("ROLE_USER");
+    }
+
+    @GetMapping("/role/admin")
+    public List<User> getUsersWithAdminRole() {
+        return userService.getUsersByRole("ROLE_ADMIN");
+    }
     // Build Get All Users REST API
     // http://localhost:8080/api/users
     @GetMapping
