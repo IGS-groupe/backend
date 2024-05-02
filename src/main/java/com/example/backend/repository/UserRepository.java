@@ -8,8 +8,12 @@ import com.example.backend.entity.User;
 
 public interface UserRepository extends JpaRepository<User, Long>{
     Optional<User> findByEmail(String email);
-    Optional<User> findByNom(String nom);
-    Boolean existsByNom(String Nom);
+    Optional<User> findByUsernameOrEmail(String username, String email);
+    Optional<User> findByUsername(String username);
+    Boolean existsByUsername(String username);
     Boolean existsByEmail(String email);
+    Optional<User> findByActivationToken(String activationToken);
+    Optional<User> findByResetToken(String resetToken);
+
     
 } 

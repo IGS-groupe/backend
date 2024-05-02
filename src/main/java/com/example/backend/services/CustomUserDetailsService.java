@@ -37,7 +37,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
-                user.getMotdepasse(), // assuming motdepasse is the password field
+                user.getPassword(), // assuming motdepasse is the password field
                 authorities
         );
     }
