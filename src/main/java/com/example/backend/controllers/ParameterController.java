@@ -29,17 +29,14 @@ public class ParameterController {
     private final ParameterService parameterService;
 
     @PostMapping
-    public ResponseEntity<?> saveParameters( @RequestBody List<ParameterDTO> paramaters) {
-    List<Parameter> savedParameters = new ArrayList<>();
-    for (ParameterDTO parameterDTO : paramaters) {
+    public ResponseEntity<?> saveParameters( @RequestBody ParameterDTO paramaterDTO) {
         Parameter parameter = new Parameter();
-        parameter.setName(parameterDTO.getName());
-        parameter.setRdl(parameterDTO.getRdl());
-        parameter.setUnit(parameterDTO.getUnit());
-        savedParameters.add(parameterService.saveParameter(parameter));
-    }
+        parameter.setName(paramaterDTO.getName());
+        parameter.setRdl(paramaterDTO.getRdl());
+        parameter.setUnit(paramaterDTO.getUnit());
+        parameterService.saveParameter(parameter);
     Map<String, Object> response = new HashMap<>();
-    response.put("message", String.format("%d parameters saved successfully!", savedParameters.size()));
+    response.put("message", String.format("%d parameters saved successfully!"));
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

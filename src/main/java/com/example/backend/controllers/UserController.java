@@ -41,12 +41,12 @@ public class UserController {
 
     @GetMapping("/role/user")
     public List<User> getUsersWithUserRole() {
-        return userService.getUsersByRole("ROLE_USER");
+        return userService.getUsersByRole("USER");
     }
 
     @GetMapping("/role/admin")
     public List<User> getUsersWithAdminRole() {
-        return userService.getUsersByRole("ROLE_ADMIN");
+        return userService.getUsersByRole("ADMIN");
     }
     // Build Get All Users REST API
     // http://localhost:8080/api/users
