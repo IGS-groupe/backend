@@ -91,7 +91,7 @@ public class UserController {
     // build get user by id REST API
     // http://localhost:8080/api/users/1
     @GetMapping("{id}")
-    @PreAuthorize("hasRole('USER','ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<User> getUserById(@PathVariable("id") Long userId){
         User user = userService.getUserById(userId);
         return new ResponseEntity<>(user, HttpStatus.OK);

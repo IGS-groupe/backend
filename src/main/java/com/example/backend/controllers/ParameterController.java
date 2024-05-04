@@ -43,6 +43,7 @@ public class ParameterController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<List<Parameter>> getAllParameter() {
         List<Parameter> parameters = parameterService.getAll();
         return ResponseEntity.ok(parameters);

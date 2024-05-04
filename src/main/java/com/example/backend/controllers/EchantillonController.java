@@ -49,7 +49,7 @@ public class EchantillonController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('USER','ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<?> getEchantillonById(@PathVariable Long id) {
         try {
             Echantillon echantillon = echantillonService.getEchantillonById(id);
@@ -60,7 +60,7 @@ public class EchantillonController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<Void> deleteEchantillon(@PathVariable Long id) {
         echantillonService.deleteEchantillon(id);
         return ResponseEntity.noContent().build();
@@ -72,7 +72,7 @@ public class EchantillonController {
     }
 
     @GetMapping("/by-demande/{demandeId}")
-    @PreAuthorize("hasRole('USER','ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<List<Echantillon>> getEchantillonsByDemandeId(@PathVariable Long demandeId) {
         List<Echantillon> echantillons = echantillonService.findAllByDemandeId(demandeId);
         if (echantillons.isEmpty()) {

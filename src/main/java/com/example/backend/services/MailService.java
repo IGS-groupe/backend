@@ -62,37 +62,53 @@ public class MailService {
     public void sendStatusEmail(String toEmail, String status) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
+    
         helper.setFrom(fromMail);
         helper.setTo(toEmail);
         helper.setSubject("Status de votre demande - IGS");
-
-        String content = generateEmailContent( status);
+    
+        String content = generateEmailContent(status);
         helper.setText(content, true); // true to send HTML
-
+    
         mailSender.send(message);
     }
-
-    private String generateEmailContent( String status) {
-        String content = "<h1>Bonjour  </h1>";
-
+    
+    private String generateEmailContent(String status) {
+        String content = "<h1>Bonjour,</h1>";
+    
         switch (status.toLowerCase()) {
-            case "bien reçu":
-                content += "<p>Votre échantillon a été <strong>bien reçu</strong>.</p>";
+            case "demande en attente":
+                content += "<p>Votre demande d'analyse a été transmise et est <strong>en attente d'acceptation</strong>.</p>";
                 break;
-            case "refusé":
-                content += "<p>Malheureusement, votre échantillon a été <strong>refusé</strong>.</p>";
+            case "resultats partiels":
+                content += "<p>Les <strong>résultats partiels</strong> de votre analyse sont disponibles.</p>";
+                break;
+            case "echantillon rejeté":
+                content += "<p>Malheureusement, votre échantillon a été <strong>rejeté</strong>.</p>";
+                break;
+            case "depassement de norme":
+                content += "<p>Votre échantillon montre un <strong>dépassement de norme</strong>.</p>";
+                break;
+            case "en cours d'analyse":
+                content += "<p>Votre échantillon est <strong>reçu au laboratoire</strong> et en cours d'analyse.</p>";
+                break;
+            case "resultats complets":
+                content += "<p>Les <strong>résultats complets</strong> de votre analyse sont disponibles.</p>";
+                break;
+            case "non-potable":
+                content += "<p>L'analyse indique que l'échantillon est <strong>non-potable</strong>.</p>";
                 break;
             default:
                 content += "<p>Il y a un problème inattendu avec votre échantillon. Veuillez nous contacter.</p>";
                 break;
         }
-
+    
         content += "<p>Pour plus d'informations, veuillez visiter notre portail ou nous contacter directement.</p>";
         content += "<p>Cordialement,</p>";
         content += "<p>L'équipe IGS</p>";
-
+    
         return content;
     }
+    
 
 }

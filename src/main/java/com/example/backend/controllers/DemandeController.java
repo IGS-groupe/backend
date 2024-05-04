@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.backend.dto.DemandeDTO;
+import com.example.backend.dto.etatDTO;
 import com.example.backend.entity.Demande;
 import com.example.backend.entity.Langue;
 import com.example.backend.services.DemandeService;
@@ -57,21 +58,21 @@ public class DemandeController {
     }
 
     @GetMapping("/{demandeId}")
-    @PreAuthorize("hasRole('USER','ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<Demande> getDemandeById(@PathVariable Long demandeId) {
         Demande demande = demandeService.getDemandeByDemandeId(demandeId);
         return ResponseEntity.ok(demande);
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('USER','ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Demande>> getAllDemandes() {
         List<Demande> demandes = demandeService.getAllDemandes();
         return ResponseEntity.ok(demandes);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<Demande> updateDemande(@PathVariable Long id, @RequestBody DemandeDTO demandeDTO) {
         Demande demande = new Demande();
         demande.setDemandePour(demandeDTO.getDemandePour());
@@ -87,12 +88,12 @@ public class DemandeController {
 
     @PutMapping("/etat/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateState(@PathVariable Long id, @RequestBody String etat) {
-        demandeService.updateState(id, etat);
+    public ResponseEntity<?> updateState(@PathVariable Long id, @RequestBody etatDTO etat) {
+        demandeService.updateState(id, etat.getEtat());
         try {
             Demande demande  = demandeService.getDemandeByDemandeId(id);
             String email = demande.getCourrielsSupplementaires();
-            mailService.sendStatusEmail( email,  etat);
+            mailService.sendStatusEmail( email,  etat.getEtat());
             Map<String, Object> response = new HashMap<>();
             response.put("message","Demande update successfully");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -104,7 +105,7 @@ public class DemandeController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('USER','ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> deleteDemande(@PathVariable Long id) {
         demandeService.deleteDemande(id);
         return ResponseEntity.ok("Demande successfully deleted!");
