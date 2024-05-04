@@ -2,6 +2,7 @@ package com.example.backend.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.backend.dto.EchantillonDTO;
@@ -27,6 +28,7 @@ public class EchantillonController {
     private final DemandeService demandeService;
 
     @PostMapping
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> saveEchantillon(@RequestBody EchantillonDTO echantillonDTO) {
         try {
             Echantillon echantillon = mapDtoToEntity(echantillonDTO);
@@ -41,11 +43,13 @@ public class EchantillonController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Echantillon>> getAllEchantillons() {
         return ResponseEntity.ok(echantillonService.getAllEchantillons());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('USER','ADMIN')")
     public ResponseEntity<?> getEchantillonById(@PathVariable Long id) {
         try {
             Echantillon echantillon = echantillonService.getEchantillonById(id);
@@ -56,6 +60,7 @@ public class EchantillonController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Void> deleteEchantillon(@PathVariable Long id) {
         echantillonService.deleteEchantillon(id);
         return ResponseEntity.noContent().build();
@@ -66,7 +71,18 @@ public class EchantillonController {
         return ResponseEntity.ok(echantillonService.getEchantillonsByPriorite(priorite));
     }
 
+    @GetMapping("/by-demande/{demandeId}")
+    @PreAuthorize("hasRole('USER','ADMIN')")
+    public ResponseEntity<List<Echantillon>> getEchantillonsByDemandeId(@PathVariable Long demandeId) {
+        List<Echantillon> echantillons = echantillonService.findAllByDemandeId(demandeId);
+        if (echantillons.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(echantillons);
+    }
+
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> updateEchantillon(@PathVariable Long id, @RequestBody EchantillonDTO echantillonDTO) {
         try {
             Echantillon updatedEchantillon = echantillonService.updateEchantillon(id, mapDtoToEntity(echantillonDTO));

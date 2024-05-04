@@ -120,38 +120,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("User registered but failed to send activation email");
         }
     }
-    @PostMapping("/signupAdmin")
-    public ResponseEntity<?> registerAdmin(@RequestBody SignUpDto signUpDto){
-        
-        if (userRepository.existsByUsername(signUpDto.getUsername())) {
-            return new ResponseEntity<>("Username is already taken!", HttpStatus.BAD_REQUEST);
-        }
-        if (userRepository.existsByEmail(signUpDto.getEmail())) {
-            return new ResponseEntity<>("Email is already taken!", HttpStatus.BAD_REQUEST);
-        }
-
-        // Create new user's account
-        User user = new User();
-        user.setFirstName(signUpDto.getFirstName());
-        user.setLastName(signUpDto.getLastName());
-        user.setUsername(signUpDto.getUsername());
-        user.setEmail(signUpDto.getEmail());
-        user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
-        user.setGenre(signUpDto.getGenre());
-        
-        Role roles = roleRepository.findByName("ADMIN").orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-        user.setRoles(Collections.singleton(roles));
-        user.setActivationToken(UUID.randomUUID().toString());
-        userRepository.save(user);
-        
-        // Send activation email
-        try {
-            mailService.sendActivationEmail(user.getEmail(), user.getFirstName() + " " + user.getLastName(), user.getActivationToken());
-            return ResponseEntity.ok("User registered successfully and activation email sent.");
-        } catch (MessagingException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("User registered but failed to send activation email");
-        }
-    }
+    
     @GetMapping("/activate")
     public ResponseEntity<String> activateUser(@RequestParam("token") String token) {
         Optional<User> userOptional = userRepository.findByActivationToken(token);

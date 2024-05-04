@@ -2,6 +2,7 @@ package com.example.backend.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.backend.dto.ParameterDTO;
@@ -16,9 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PathVariable;
 
 
 @RestController
@@ -29,15 +27,19 @@ public class ParameterController {
     private final ParameterService parameterService;
 
     @PostMapping
-    public ResponseEntity<?> saveParameters( @RequestBody ParameterDTO paramaterDTO) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> saveParameters(@RequestBody ParameterDTO parameterDTO) {
         Parameter parameter = new Parameter();
-        parameter.setName(paramaterDTO.getName());
-        parameter.setRdl(paramaterDTO.getRdl());
-        parameter.setUnit(paramaterDTO.getUnit());
-        parameterService.saveParameter(parameter);
-    Map<String, Object> response = new HashMap<>();
-    response.put("message", String.format("%d parameters saved successfully!"));
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        parameter.setName(parameterDTO.getName());
+        parameter.setRdl(parameterDTO.getRdl());
+        parameter.setUnit(parameterDTO.getUnit());
+        
+        Parameter savedParameter = parameterService.saveParameter(parameter); // Returns the saved Parameter object
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Parameter saved successfully!");
+        response.put("savedParameter", savedParameter); // Optionally include the saved parameter details
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
@@ -47,17 +49,20 @@ public class ParameterController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Parameter> getParameterById(@PathVariable Long id) {
         Optional<Parameter> parameter = parameterService.getParameterById(id);
         return parameter.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteParameter(@PathVariable Long id) {
         parameterService.deleteParameter(id);
         return ResponseEntity.noContent().build();
     }
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Parameter> updateParameter(@PathVariable Long id ,@PathVariable Long paramaterId, @RequestBody ParameterDTO parameterDTO) {
     Optional<Parameter> optionalParameter = parameterService.getParameterById(id);
     if (optionalParameter.isPresent()) {

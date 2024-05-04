@@ -3,6 +3,7 @@ package com.example.backend.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.backend.dto.DemandeDTO;
@@ -30,6 +31,7 @@ public class DemandeController {
     private MailService mailService;
 
     @PostMapping
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> createDemande(@RequestBody DemandeDTO demandeDTO) {
         Demande demande = new Demande();
         demande.setDemandePour(demandeDTO.getDemandePour());
@@ -55,18 +57,21 @@ public class DemandeController {
     }
 
     @GetMapping("/{demandeId}")
+    @PreAuthorize("hasRole('USER','ADMIN')")
     public ResponseEntity<Demande> getDemandeById(@PathVariable Long demandeId) {
         Demande demande = demandeService.getDemandeByDemandeId(demandeId);
         return ResponseEntity.ok(demande);
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('USER','ADMIN')")
     public ResponseEntity<List<Demande>> getAllDemandes() {
         List<Demande> demandes = demandeService.getAllDemandes();
         return ResponseEntity.ok(demandes);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Demande> updateDemande(@PathVariable Long id, @RequestBody DemandeDTO demandeDTO) {
         Demande demande = new Demande();
         demande.setDemandePour(demandeDTO.getDemandePour());
@@ -81,6 +86,7 @@ public class DemandeController {
     }
 
     @PutMapping("/etat/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateState(@PathVariable Long id, @RequestBody String etat) {
         demandeService.updateState(id, etat);
         try {
@@ -98,6 +104,7 @@ public class DemandeController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('USER','ADMIN')")
     public ResponseEntity<String> deleteDemande(@PathVariable Long id) {
         demandeService.deleteDemande(id);
         return ResponseEntity.ok("Demande successfully deleted!");
