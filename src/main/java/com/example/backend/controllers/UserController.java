@@ -56,7 +56,7 @@ public class UserController {
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
     @PostMapping("/signupAdmin")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> registerAdmin(@RequestBody SignUpDto signUpDto){
         
         if (userRepository.existsByUsername(signUpDto.getUsername())) {
@@ -75,7 +75,7 @@ public class UserController {
         user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
         user.setGenre(signUpDto.getGenre());
         
-        Role roles = roleRepository.findByName("ADMIN").orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+        Role roles = roleRepository.findByName("ROLE_ADMIN").orElseThrow(() -> new RuntimeException("Error: Role is not found."));
         user.setRoles(Collections.singleton(roles));
         user.setActivationToken(UUID.randomUUID().toString());
         userRepository.save(user);
@@ -104,7 +104,7 @@ public class UserController {
     }
 
     @GetMapping("/role/admin")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public List<User> getUsersWithAdminRole() {
         return userService.getUsersByRole("ADMIN");
     }

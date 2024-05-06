@@ -8,6 +8,8 @@ import com.example.backend.exception.EchantillonNotFoundException;
 import com.example.backend.repository.EchantillonRepository;
 import com.example.backend.repository.ParameterRepository;
 import lombok.AllArgsConstructor;
+
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -32,8 +34,13 @@ public class EchantillonServiceImpl implements EchantillonService {
         }
         return echantillonRepository.save(echantillon);
     }
-
-
+    
+    @Override
+    public Set<Parameter> getParametersByEchantillonId(Long echantillonId) {
+        return echantillonRepository.findById(echantillonId)
+                .map(Echantillon::getParameter)
+                .orElse(Collections.emptySet());
+    }
     @Override
     public List<Echantillon> getAllEchantillons() {
         return echantillonRepository.findAll();

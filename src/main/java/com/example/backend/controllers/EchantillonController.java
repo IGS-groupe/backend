@@ -91,6 +91,14 @@ public class EchantillonController {
         }
     }
 
+    @GetMapping("/{echantillonId}/parameters")
+    public ResponseEntity<Set<Parameter>> getParametersByEchantillonId(@PathVariable Long echantillonId) {
+        Set<Parameter> parameters = echantillonService.getParametersByEchantillonId(echantillonId);
+        if (parameters.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(parameters);
+    }
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<Void> deleteEchantillon(@PathVariable Long id) {

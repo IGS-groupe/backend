@@ -1,13 +1,11 @@
 package com.example.backend.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.backend.dto.DemandeDTO;
-import com.example.backend.dto.etatDTO;
 import com.example.backend.entity.Demande;
 import com.example.backend.entity.Langue;
 import com.example.backend.services.DemandeService;
@@ -27,40 +25,42 @@ import lombok.AllArgsConstructor;
 @RequestMapping("/api/demandes")
 public class DemandeController {
     private final DemandeService demandeService;
-    private UserService userService;
-    @Autowired
-    private MailService mailService;
+    private final UserService userService;
+    private final MailService mailService;
 
     @PostMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> createDemande(@RequestBody DemandeDTO demandeDTO) {
-        Demande demande = new Demande();
-        demande.setDemandePour(demandeDTO.getDemandePour());
-        demande.setEnvoyeAuLaboratoire(demandeDTO.getEnvoyeAuLaboratoire());
-        demande.setCourrielsSupplementaires(demandeDTO.getCourrielsSupplementaires());
-        demande.setBonDeCommande(demandeDTO.getBonDeCommande());
-        demande.setUnEchantillon(demandeDTO.isUnEchantillon());
-        demande.setLangueDuCertificat(Langue.valueOf(demandeDTO.getLangueDuCertificat().toUpperCase())); // Convert to uppercase
-        demande.setCommentairesInternes(demandeDTO.getCommentairesInternes());
-        
-        // Retrieve user by ID and set to demande
-        demande.setUser(userService.getUserById(demandeDTO.getUserId()));
+        try {
+            Demande demande = new Demande();
+            demande.setDemandePour(demandeDTO.getDemandePour());
+            demande.setEnvoyeAuLaboratoire(demandeDTO.getEnvoyeAuLaboratoire());
+            demande.setCourrielsSupplementaires(demandeDTO.getCourrielsSupplementaires());
+            demande.setBonDeCommande(demandeDTO.getBonDeCommande());
+            demande.setUnEchantillon(demandeDTO.isUnEchantillon());
+            demande.setLangueDuCertificat(Langue.valueOf(demandeDTO.getLangueDuCertificat().toUpperCase()));
+            demande.setCommentairesInternes(demandeDTO.getCommentairesInternes());
+            demande.setEtat("Demande en attente");
+            demande.setUser(userService.getUserById(demandeDTO.getUserId()));
 
-        // Save the new demande
-        Demande savedDemande = demandeService.saveDemande(demande);
+            Demande savedDemande = demandeService.saveDemande(demande);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Demande created successfully!");
+            response.put("demandeId", savedDemande.getDemandeId());
 
-        // Create a response with the ID of the newly created demande
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Demande created successfully!");
-        response.put("demandeId", savedDemande.getDemandeId()); // Return only the demande ID
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid language specified.");
+        }
     }
 
     @GetMapping("/{demandeId}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<Demande> getDemandeById(@PathVariable Long demandeId) {
         Demande demande = demandeService.getDemandeByDemandeId(demandeId);
+        if (demande == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
         return ResponseEntity.ok(demande);
     }
 
@@ -70,6 +70,7 @@ public class DemandeController {
         List<Demande> demandes = demandeService.getAllDemandes();
         return ResponseEntity.ok(demandes);
     }
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Demande>> getDemandesByUserId(@PathVariable Long userId) {
         List<Demande> demandes = demandeService.getDemandesByUserId(userId);
@@ -93,20 +94,17 @@ public class DemandeController {
 
     @PutMapping("/etat/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateState(@PathVariable Long id, @RequestBody etatDTO etat) {
-        demandeService.updateState(id, etat.getEtat());
+    public ResponseEntity<?> updateState(@PathVariable Long id, @RequestBody Map<String, String> etat) {
         try {
-            Demande demande  = demandeService.getDemandeByDemandeId(id);
-            String email = demande.getCourrielsSupplementaires();
-            mailService.sendStatusEmail( email,  etat.getEtat());
+            demandeService.updateState(id, etat.get("etat"));
+            Demande demande = demandeService.getDemandeByDemandeId(id);
+            mailService.sendStatusEmail(demande.getCourrielsSupplementaires(), etat.get("etat"));
             Map<String, Object> response = new HashMap<>();
-            response.put("message","Demande update successfully");
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            response.put("message", "Demande updated successfully");
+            return ResponseEntity.ok(response);
         } catch (MessagingException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("User registered but failed to send activation email");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send status email.");
         }
-        
-        
     }
 
     @DeleteMapping("/{id}")
