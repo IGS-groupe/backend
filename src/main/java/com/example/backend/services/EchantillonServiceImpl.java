@@ -22,7 +22,6 @@ public class EchantillonServiceImpl implements EchantillonService {
     
     @Override
     public Echantillon saveEchantillon(Echantillon echantillon) {
-        // Handle parameters if they exist
         if (echantillon.getParameter() != null && !echantillon.getParameter().isEmpty()) {
             Set<Parameter> managedParameters = new HashSet<>();
             for (Parameter param : echantillon.getParameter()) {
@@ -33,6 +32,7 @@ public class EchantillonServiceImpl implements EchantillonService {
         }
         return echantillonRepository.save(echantillon);
     }
+
 
     @Override
     public List<Echantillon> getAllEchantillons() {

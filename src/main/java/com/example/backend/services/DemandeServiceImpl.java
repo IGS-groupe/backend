@@ -35,7 +35,10 @@ public class DemandeServiceImpl implements DemandeService {
     public Demande getDemandeByDemandeId(Long demandeId) {
         return demandeRepository.findByDemandeId(demandeId);
     }
-
+    @Override
+    public List<Demande> getDemandesByUserId(Long userId) {
+        return demandeRepository.findByUserId(userId);
+    }
     @Override
     public Demande updateDemande(Long id, Demande demande) {
         Optional<Demande> optionalDemande = demandeRepository.findById(id);

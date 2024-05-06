@@ -1,23 +1,26 @@
 package com.example.backend.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.backend.dto.EchantillonDTO;
+import com.example.backend.entity.Demande;
 import com.example.backend.entity.Echantillon;
 import com.example.backend.entity.Gabarit;
 import com.example.backend.entity.Priorite;
 import com.example.backend.entity.TypeEchantillon;
+import com.example.backend.repository.ParameterRepository;
 import com.example.backend.services.DemandeService;
 import com.example.backend.services.EchantillonService;
-
+import com.example.backend.entity.Parameter;
 import lombok.AllArgsConstructor;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+
 
 @RestController
 @AllArgsConstructor
@@ -26,7 +29,8 @@ public class EchantillonController {
 
     private final EchantillonService echantillonService;
     private final DemandeService demandeService;
-
+    @Autowired
+    private ParameterRepository parameterRepository;
     @PostMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> saveEchantillon(@RequestBody EchantillonDTO echantillonDTO) {
@@ -41,6 +45,34 @@ public class EchantillonController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
+    @PostMapping("/All/{demandeId}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> saveBatchEchantillons(@PathVariable Long demandeId, @RequestBody List<EchantillonDTO> echantillonDTOList) {
+        try {
+            Demande demande = demandeService.getDemandeByDemandeId(demandeId); // Assume there's a method to fetch Demande
+            List<Echantillon> echantillons = new ArrayList<>();
+            for (EchantillonDTO echantillonDTO : echantillonDTOList) {
+                echantillonDTO.setDemandeId(demandeId);
+                Echantillon echantillon = mapDtoToEntity(echantillonDTO);
+                echantillon.setDemande(demande); // Set the existing Demande
+                Echantillon savedEchantillon = echantillonService.saveEchantillon(echantillon);
+                echantillons.add(savedEchantillon);
+            }
+            List<Map<String, Object>> response = new ArrayList<>();
+            for (Echantillon savedEchantillon : echantillons) {
+                Map<String, Object> echantillonResponse = new HashMap<>();
+                echantillonResponse.put("message", "Echantillon created successfully!");
+                echantillonResponse.put("id", savedEchantillon.getEchantillonId());
+                response.add(echantillonResponse);
+            }
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+
+
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -92,7 +124,7 @@ public class EchantillonController {
         }
     }
 
-    private Echantillon mapDtoToEntity(EchantillonDTO dto) {
+    public Echantillon mapDtoToEntity(EchantillonDTO dto) {
         Echantillon echantillon = new Echantillon();
         echantillon.setGabarit(Gabarit.valueOf(dto.getGabarit().toUpperCase()));
         echantillon.setTypeEchantillon(TypeEchantillon.valueOf(dto.getTypeEchantillon().toUpperCase()));
@@ -104,6 +136,16 @@ public class EchantillonController {
         echantillon.setPriorite(Priorite.valueOf(dto.getPriorite().toUpperCase()));
         echantillon.setCommentairesInternes(dto.getCommentairesInternes());
         echantillon.setDemande(demandeService.getDemandeByDemandeId(dto.getDemandeId()));
+
+        if (dto.getParameterIds() != null && !dto.getParameterIds().isEmpty()) {
+            Set<Parameter> parameters = dto.getParameterIds().stream()
+                .map(id -> parameterRepository.findById(id).orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+            echantillon.setParameter(parameters);
+        }
+
         return echantillon;
     }
+
 }

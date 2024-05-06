@@ -12,6 +12,7 @@ public interface DemandeService {
     Demande getDemandeByDemandeId(Long demandeId);
     List<Demande> getAllDemandes();
     List<Demande> findAllByUserId(Long userId);  
+    List<Demande> getDemandesByUserId(Long userId);
     Demande updateDemande(Long id ,Demande demande);
     void deleteDemande(Long id);
     void updateState(Long demandeId , String etat);

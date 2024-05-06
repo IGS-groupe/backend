@@ -17,6 +17,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
     Demande findByDemandeId(Long demandeId);
     @Query("SELECT d FROM Demande d WHERE d.user.id = :userId")
     List<Demande> findAllByUserId(@Param("userId") Long userId);    
+    List<Demande> findByUserId(Long userId);
     Optional<Demande> findByDemandePour(String nom);
     @Transactional
     @Modifying

@@ -70,7 +70,12 @@ public class DemandeController {
         List<Demande> demandes = demandeService.getAllDemandes();
         return ResponseEntity.ok(demandes);
     }
-
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Demande>> getDemandesByUserId(@PathVariable Long userId) {
+        List<Demande> demandes = demandeService.getDemandesByUserId(userId);
+        return ResponseEntity.ok(demandes);
+    }
+    
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<Demande> updateDemande(@PathVariable Long id, @RequestBody DemandeDTO demandeDTO) {
