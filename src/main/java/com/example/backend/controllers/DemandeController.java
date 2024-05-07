@@ -55,7 +55,7 @@ public class DemandeController {
     }
 
     @GetMapping("/{demandeId}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<Demande> getDemandeById(@PathVariable Long demandeId) {
         Demande demande = demandeService.getDemandeByDemandeId(demandeId);
         if (demande == null) {
@@ -65,20 +65,21 @@ public class DemandeController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<Demande>> getAllDemandes() {
         List<Demande> demandes = demandeService.getAllDemandes();
         return ResponseEntity.ok(demandes);
     }
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<Demande>> getDemandesByUserId(@PathVariable Long userId) {
         List<Demande> demandes = demandeService.getDemandesByUserId(userId);
         return ResponseEntity.ok(demandes);
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<Demande> updateDemande(@PathVariable Long id, @RequestBody DemandeDTO demandeDTO) {
         Demande demande = new Demande();
         demande.setDemandePour(demandeDTO.getDemandePour());
@@ -93,7 +94,7 @@ public class DemandeController {
     }
 
     @PutMapping("/etat/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> updateState(@PathVariable Long id, @RequestBody Map<String, String> etat) {
         try {
             demandeService.updateState(id, etat.get("etat"));
@@ -108,7 +109,7 @@ public class DemandeController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<String> deleteDemande(@PathVariable Long id) {
         demandeService.deleteDemande(id);
         return ResponseEntity.ok("Demande successfully deleted!");

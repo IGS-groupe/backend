@@ -91,26 +91,27 @@ public class UserController {
     // build get user by id REST API
     // http://localhost:8080/api/users/1
     @GetMapping("{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<User> getUserById(@PathVariable("id") Long userId){
         User user = userService.getUserById(userId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     @GetMapping("/role/user")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public List<User> getUsersWithUserRole() {
-        return userService.getUsersByRole("USER");
+        return userService.getUsersByRole("ROLE_USER");
     }
 
     @GetMapping("/role/admin")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public List<User> getUsersWithAdminRole() {
-        return userService.getUsersByRole("ADMIN");
+        return userService.getUsersByRole("ROLE_ADMIN");
     }
     // Build Get All Users REST API
     // http://localhost:8080/api/users
     @GetMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<User>> getAllUsers(){
         List<User> users = userService.getAllUsers();
         return new ResponseEntity<>(users, HttpStatus.OK);
@@ -118,7 +119,7 @@ public class UserController {
 
     // Build Update User REST API
     @PutMapping("{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     // http://localhost:8080/api/users/1
     public ResponseEntity<User> updateUser(@PathVariable("id") Long userId,
                                            @RequestBody User user){

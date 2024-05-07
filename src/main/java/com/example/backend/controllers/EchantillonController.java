@@ -75,13 +75,13 @@ public class EchantillonController {
 
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<Echantillon>> getAllEchantillons() {
         return ResponseEntity.ok(echantillonService.getAllEchantillons());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> getEchantillonById(@PathVariable Long id) {
         try {
             Echantillon echantillon = echantillonService.getEchantillonById(id);
@@ -92,6 +92,7 @@ public class EchantillonController {
     }
 
     @GetMapping("/{echantillonId}/parameters")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<Set<Parameter>> getParametersByEchantillonId(@PathVariable Long echantillonId) {
         Set<Parameter> parameters = echantillonService.getParametersByEchantillonId(echantillonId);
         if (parameters.isEmpty()) {
@@ -100,7 +101,7 @@ public class EchantillonController {
         return ResponseEntity.ok(parameters);
     }
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<Void> deleteEchantillon(@PathVariable Long id) {
         echantillonService.deleteEchantillon(id);
         return ResponseEntity.noContent().build();
@@ -112,7 +113,7 @@ public class EchantillonController {
     }
 
     @GetMapping("/by-demande/{demandeId}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<Echantillon>> getEchantillonsByDemandeId(@PathVariable Long demandeId) {
         List<Echantillon> echantillons = echantillonService.findAllByDemandeId(demandeId);
         if (echantillons.isEmpty()) {
