@@ -127,10 +127,23 @@ public class UserController {
         User updatedUser = userService.updateUser(user);
         return new ResponseEntity<>(updatedUser, HttpStatus.OK);
     }
+    @PutMapping("/disable/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<String> disableUser(@PathVariable("id") Long userId){
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        if(user.isActive()){
+            user.setActive(false);
+        }
+        else{
+            user.setActive(true);
+        }
+        userRepository.save(user);
+        return ResponseEntity.ok("User account disabled successfully.");
+    }
 
     // Build Delete User REST API
     @DeleteMapping("{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable("id") Long userId){
         userService.deleteUser(userId);
         return new ResponseEntity<>("User successfully deleted!", HttpStatus.OK);

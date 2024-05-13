@@ -8,4 +8,5 @@ public class ParameterDTO {
     private String name;
     private BigDecimal rdl;
     private String unit;
+    private boolean available;
 }

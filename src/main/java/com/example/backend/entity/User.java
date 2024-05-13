@@ -35,6 +35,7 @@ public class User implements UserDetails {
     private String username;
     private String email;
     private String password;
+    private String phoneNumber; 
     private String genre;
     private boolean active = false;
     private String activationToken;

@@ -69,18 +69,17 @@ public class EchantillonServiceImpl implements EchantillonService {
         Optional<Echantillon> optionalEchantillon = echantillonRepository.findById(id);
         if (optionalEchantillon.isPresent()) {
             Echantillon existingEchantillon = optionalEchantillon.get();
-            // Update fields
-            existingEchantillon.setGabarit(echantillon.getGabarit());
             existingEchantillon.setTypeEchantillon(echantillon.getTypeEchantillon());
-            existingEchantillon.setNormeEchantillon(echantillon.getNormeEchantillon());
             existingEchantillon.setNomEchantillon(echantillon.getNomEchantillon());
             existingEchantillon.setLieuPrelevement(echantillon.getLieuPrelevement());
+            existingEchantillon.setAddressRetourner((echantillon.getAddressRetourner()));
             existingEchantillon.setDateFinPrelevement(echantillon.getDateFinPrelevement());
             existingEchantillon.setHeureFinPrelevement(echantillon.getHeureFinPrelevement());
             existingEchantillon.setPriorite(echantillon.getPriorite());
             existingEchantillon.setCommentairesInternes(echantillon.getCommentairesInternes());
             existingEchantillon.setDemande(echantillon.getDemande());
-            // Update parameters, if applicable
+            existingEchantillon.setReturns(echantillon.getReturns());
+            existingEchantillon.setDisposes(echantillon.getDisposes());     
             if (echantillon.getParameter() != null) {
                 existingEchantillon.setParameter(new HashSet<>(echantillon.getParameter()));
             }

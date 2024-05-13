@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -41,6 +42,24 @@ public class ParameterController {
         response.put("savedParameter", savedParameter); // Optionally include the saved parameter details
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+    // @PostMapping
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    // public ResponseEntity<?> saveParameters(@RequestBody List<ParameterDTO> parameterDTOList) {
+    //     List<Parameter> parameters = parameterDTOList.stream().map(dto -> {
+    //         Parameter param = new Parameter();
+    //         param.setName(dto.getName());
+    //         param.setRdl(dto.getRdl());
+    //         param.setUnit(dto.getUnit());
+    //         return param;
+    //     }).collect(Collectors.toList());
+
+    //     List<Parameter> savedParameters = parameterService.saveAllParameters(parameters); // Assuming saveAllParameters method that saves a list of Parameters
+
+    //     Map<String, Object> response = new HashMap<>();
+    //     response.put("message", "Parameters saved successfully!");
+    //     response.put("savedParameters", savedParameters); // Optionally include the saved parameters details
+    //     return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    // }
 
     @GetMapping
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
@@ -56,12 +75,19 @@ public class ParameterController {
         return parameter.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<Void> deleteParameter(@PathVariable Long id) {
-        parameterService.deleteParameter(id);
-        return ResponseEntity.noContent().build();
+    @GetMapping("/available")
+    public ResponseEntity<List<Parameter>> getAllAvailableParameters() {
+        List<Parameter> parameters = parameterService.findAllAvailableParameters();
+        return ResponseEntity.ok(parameters);
     }
+
+    @PutMapping("/{id}/availability")
+    public ResponseEntity<Parameter> updateParameterAvailability(@PathVariable Long id, @RequestParam boolean availability) {
+        Parameter updatedParameter = parameterService.updateParameterAvailability(id, availability);
+        return ResponseEntity.ok(updatedParameter);
+    }
+
+    
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<Parameter> updateParameter(@PathVariable Long id ,@PathVariable Long paramaterId, @RequestBody ParameterDTO parameterDTO) {
@@ -75,6 +101,12 @@ public class ParameterController {
         return ResponseEntity.ok(updatedParameter);
     } else {
         return ResponseEntity.notFound().build();
+        }
+    }   
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Void> deleteParameter(@PathVariable Long id) {
+        parameterService.deleteParameter(id);
+        return ResponseEntity.noContent().build();
     }
-}   
 }

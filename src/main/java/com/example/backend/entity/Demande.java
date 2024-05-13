@@ -28,8 +28,9 @@ public class Demande {
     @Column(name = "UnEchantillon")
     private boolean unEchantillon;
     
+    @Enumerated(EnumType.STRING)
     @Column(name = "Etat")
-    private String etat;
+    private AnalysisStatus etat;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "LangueDuCertificat")

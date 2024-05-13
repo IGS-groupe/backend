@@ -75,6 +75,10 @@ public class AuthController {
         if (user == null) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("message", "User not found."));
             }
+        if (!user.isActive()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                    .body(Collections.singletonMap("message", "Account is disabled."));
+            }
         // Generate JWT token for the authenticated user
         String jwtToken = jwtService.generateToken(user);
         Long userId = user.getId();
@@ -105,6 +109,7 @@ public class AuthController {
         user.setUsername(signUpDto.getUsername());
         user.setEmail(signUpDto.getEmail());
         user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
+        user.setPhoneNumber(signUpDto.getPhoneNumber());
         user.setGenre(signUpDto.getGenre());
         
         Role roles = roleRepository.findByName("ROLE_USER").orElseThrow(() -> new RuntimeException("Error: Role is not found."));
@@ -138,6 +143,7 @@ public class AuthController {
         user.setUsername(signUpDto.getUsername());
         user.setEmail(signUpDto.getEmail());
         user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
+        user.setPhoneNumber(signUpDto.getPhoneNumber());
         user.setGenre(signUpDto.getGenre());
         
         Role roles = roleRepository.findByName("ROLE_SUPER_ADMIN").orElseThrow(() -> new RuntimeException("Error: Role is not found."));

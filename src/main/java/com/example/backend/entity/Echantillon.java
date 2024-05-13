@@ -17,13 +17,14 @@ public class Echantillon {
     private Long echantillonId;
     
     @Enumerated(EnumType.STRING)
-    private Gabarit gabarit;
-    
-    @Enumerated(EnumType.STRING)
     private TypeEchantillon typeEchantillon;
     
-    @Column(name = "NormeEchantillon")
-    private String normeEchantillon;
+
+    @Enumerated(EnumType.STRING)
+    private Return returns;  
+    
+    @Enumerated(EnumType.STRING)
+    private Dispose disposes; 
     
     @Column(name = "NomEchantillon")
     private String nomEchantillon;
@@ -31,6 +32,9 @@ public class Echantillon {
     @Column(name = "LieuPrelevement")
     private String lieuPrelevement;
     
+    @Column(name = "AddressRetourner") 
+    private String addressRetourner;
+
     @Column(name = "DateFinPrelevement")
     private LocalDate dateFinPrelevement;
     

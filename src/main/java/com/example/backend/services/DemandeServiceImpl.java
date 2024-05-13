@@ -3,6 +3,7 @@ package com.example.backend.services;
 
 import org.springframework.stereotype.Service;
 
+import com.example.backend.entity.AnalysisStatus;
 import com.example.backend.entity.Demande;
 import com.example.backend.entity.Echantillon;
 import com.example.backend.exception.DemandeNotFoundException;
@@ -58,7 +59,7 @@ public class DemandeServiceImpl implements DemandeService {
         }
     }
     @Override
-    public void  updateState(Long demandeId , String etat){
+    public void  updateState(Long demandeId , AnalysisStatus etat){
         Optional<Demande> optionalDemande = demandeRepository.findById(demandeId);
         if (optionalDemande.isPresent()) {
             Demande demande = optionalDemande.get();

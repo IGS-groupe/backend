@@ -8,11 +8,12 @@ import lombok.Data;
 
 @Data
 public class EchantillonDTO {
-    private String gabarit;
+    private String disposes;
+    private String returns;
     private String typeEchantillon;
-    private String normeEchantillon;
     private String nomEchantillon;
     private String lieuPrelevement;
+    private String addressRetourner;
     private LocalDate dateFinPrelevement;
     private LocalTime heureFinPrelevement;
     private String priorite;

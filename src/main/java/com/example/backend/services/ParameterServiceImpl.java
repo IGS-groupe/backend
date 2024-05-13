@@ -33,10 +33,24 @@ public class ParameterServiceImpl implements ParameterService {
     public Parameter saveParameter(Parameter parameter) {
         return parameterRepository.save(parameter);
     }
-
+    @Override
+    public List<Parameter> saveAllParameters(List<Parameter> parameters) {
+        return parameterRepository.saveAll(parameters);
+    }
+    @Override
+    public List<Parameter> findAllAvailableParameters() {
+        return parameterRepository.findByAvailable(true);
+    }
     @Override
     public void deleteParameter(Long id) {
         parameterRepository.deleteById(id);
+    }
+    @Override
+    public Parameter updateParameterAvailability(Long parameterId, boolean availability) {
+        Parameter parameter = parameterRepository.findById(parameterId)
+            .orElseThrow(() -> new RuntimeException("Parameter not found with id: " + parameterId));
+        parameter.setAvailable(availability);
+        return parameterRepository.save(parameter);
     }
     @Override
     public Parameter updateParameter(Long id, Parameter parameter) {

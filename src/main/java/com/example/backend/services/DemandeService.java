@@ -5,6 +5,7 @@ package com.example.backend.services;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.backend.entity.AnalysisStatus;
 import com.example.backend.entity.Demande;
 
 public interface DemandeService {
@@ -15,5 +16,5 @@ public interface DemandeService {
     List<Demande> getDemandesByUserId(Long userId);
     Demande updateDemande(Long id ,Demande demande);
     void deleteDemande(Long id);
-    void updateState(Long demandeId , String etat);
+    void updateState(Long demandeId , AnalysisStatus etat);
 }

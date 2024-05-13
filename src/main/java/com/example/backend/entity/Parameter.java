@@ -24,6 +24,7 @@ public class Parameter {
     @Column(name = "Unit")
     private String unit;
     
+    @Column(name = "available")
+    private boolean available=true;
     
-    // Getters and setters
 }

@@ -6,6 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.backend.dto.DemandeDTO;
+import com.example.backend.entity.AnalysisStatus;
 import com.example.backend.entity.Demande;
 import com.example.backend.entity.Langue;
 import com.example.backend.services.DemandeService;
@@ -38,10 +39,10 @@ public class DemandeController {
             demande.setCourrielsSupplementaires(demandeDTO.getCourrielsSupplementaires());
             demande.setBonDeCommande(demandeDTO.getBonDeCommande());
             demande.setUnEchantillon(demandeDTO.isUnEchantillon());
-            demande.setLangueDuCertificat(Langue.valueOf(demandeDTO.getLangueDuCertificat().toUpperCase()));
+            demande.setLangueDuCertificat(Langue.valueOf(demandeDTO.getLangueDuCertificat().toUpperCase()));  // Assuming Langue is also an enum
             demande.setCommentairesInternes(demandeDTO.getCommentairesInternes());
-            demande.setEtat("Demande en attente");
-            demande.setUser(userService.getUserById(demandeDTO.getUserId()));
+            demande.setEtat(AnalysisStatus.REQUEST_SUBMITTED);  // Set initial state using enum
+            demande.setUser(userService.getUserById(demandeDTO.getUserId()));  // Assuming getUserById is correctly implemented
 
             Demande savedDemande = demandeService.saveDemande(demande);
             Map<String, Object> response = new HashMap<>();
@@ -50,9 +51,10 @@ public class DemandeController {
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid language specified.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid language or status specified.");
         }
     }
+
 
     @GetMapping("/{demandeId}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
@@ -97,7 +99,8 @@ public class DemandeController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> updateState(@PathVariable Long id, @RequestBody Map<String, String> etat) {
         try {
-            demandeService.updateState(id, etat.get("etat"));
+            AnalysisStatus status = AnalysisStatus.valueOf(etat.get("etat"));
+            demandeService.updateState(id, status);
             Demande demande = demandeService.getDemandeByDemandeId(id);
             mailService.sendStatusEmail(demande.getCourrielsSupplementaires(), etat.get("etat"));
             Map<String, Object> response = new HashMap<>();

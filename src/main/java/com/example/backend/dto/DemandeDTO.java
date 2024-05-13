@@ -1,5 +1,7 @@
 package com.example.backend.dto;
 
+import com.example.backend.entity.AnalysisStatus;
+
 import lombok.Data;
 
 @Data
@@ -11,6 +13,7 @@ public class DemandeDTO {
     private boolean unEchantillon;
     private String langueDuCertificat;
     private String commentairesInternes;
+     private AnalysisStatus etat = AnalysisStatus.REQUEST_SUBMITTED;
     private Long userId;
 
     }

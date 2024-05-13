@@ -8,10 +8,11 @@ import org.springframework.web.bind.annotation.*;
 
 import com.example.backend.dto.EchantillonDTO;
 import com.example.backend.entity.Demande;
+import com.example.backend.entity.Dispose;
 import com.example.backend.entity.Echantillon;
-import com.example.backend.entity.Gabarit;
-import com.example.backend.entity.Priorite;
 import com.example.backend.entity.TypeEchantillon;
+import com.example.backend.entity.Priorite;
+import com.example.backend.entity.Return;
 import com.example.backend.repository.ParameterRepository;
 import com.example.backend.services.DemandeService;
 import com.example.backend.services.EchantillonService;
@@ -135,11 +136,12 @@ public class EchantillonController {
 
     public Echantillon mapDtoToEntity(EchantillonDTO dto) {
         Echantillon echantillon = new Echantillon();
-        echantillon.setGabarit(Gabarit.valueOf(dto.getGabarit().toUpperCase()));
         echantillon.setTypeEchantillon(TypeEchantillon.valueOf(dto.getTypeEchantillon().toUpperCase()));
-        echantillon.setNormeEchantillon(dto.getNormeEchantillon());
+        echantillon.setReturns(Return.valueOf(dto.getReturns().toUpperCase())); // Correct Enum conversion
+        echantillon.setDisposes(Dispose.valueOf(dto.getDisposes().toUpperCase())); // Correct Enum conversion
         echantillon.setNomEchantillon(dto.getNomEchantillon());
         echantillon.setLieuPrelevement(dto.getLieuPrelevement());
+        echantillon.setAddressRetourner(dto.getAddressRetourner());
         echantillon.setDateFinPrelevement(dto.getDateFinPrelevement());
         echantillon.setHeureFinPrelevement(dto.getHeureFinPrelevement());
         echantillon.setPriorite(Priorite.valueOf(dto.getPriorite().toUpperCase()));

@@ -13,4 +13,5 @@ import com.example.backend.entity.Parameter;
 
 public interface ParameterRepository extends JpaRepository<Parameter, Long> {
     Parameter findByParameterId(Long id);
+    List<Parameter> findByAvailable(boolean available);
 }
