@@ -80,6 +80,7 @@ public class UserController {
         user.setEmail(signUpDto.getEmail());
         user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
         user.setGenre(signUpDto.getGenre());
+        user.setPhoneNumber(signUpDto.getPhoneNumber());
         
         Role roles = roleRepository.findByName("ROLE_ADMIN").orElseThrow(() -> new RuntimeException("Error: Role is not found."));
         user.setRoles(Collections.singleton(roles));

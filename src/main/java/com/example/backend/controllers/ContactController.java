@@ -22,14 +22,14 @@ public class ContactController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<Contact>> getAllContacts() {
         List<Contact> contacts = contactService.getAllContacts();
         return ResponseEntity.ok(contacts);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<Contact> getContactById(@PathVariable Long id) {
         return contactService.getContactById(id)
                 .map(ResponseEntity::ok)

@@ -82,10 +82,14 @@ public class AuthController {
         // Generate JWT token for the authenticated user
         String jwtToken = jwtService.generateToken(user);
         Long userId = user.getId();
+        String fisrtName = user.getFirstName();
+        String lastName = user.getLastName();
         // Return the authentication response with a custom message based on the user's role
         Map<String, Object> response = new HashMap<>();
             response.put("message","User registered successfully");
             response.put("userId",userId);
+            response.put("fisrtName",fisrtName);
+            response.put("lastName",lastName);
             response.put("token",jwtToken);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
