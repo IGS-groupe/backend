@@ -93,15 +93,14 @@ public class AuthController {
     
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@RequestBody SignUpDto signUpDto){
-        
+    public ResponseEntity<?> registerUser(@RequestBody SignUpDto signUpDto) {
         if (userRepository.existsByUsername(signUpDto.getUsername())) {
-            return new ResponseEntity<>("Username is already taken!", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body("{\"error\": \"Username is already taken!\"}");
         }
         if (userRepository.existsByEmail(signUpDto.getEmail())) {
-            return new ResponseEntity<>("Email is already taken!", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body("{\"error\": \"Email is already taken!\"}");
         }
-
+    
         // Create new user's account
         User user = new User();
         user.setFirstName(signUpDto.getFirstName());
@@ -111,20 +110,21 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
         user.setPhoneNumber(signUpDto.getPhoneNumber());
         user.setGenre(signUpDto.getGenre());
-        
+    
         Role roles = roleRepository.findByName("ROLE_USER").orElseThrow(() -> new RuntimeException("Error: Role is not found."));
         user.setRoles(Collections.singleton(roles));
         user.setActivationToken(UUID.randomUUID().toString());
         userRepository.save(user);
-        
+    
         // Send activation email
         try {
             mailService.sendActivationEmail(user.getEmail(), user.getFirstName() + " " + user.getLastName(), user.getActivationToken());
-            return ResponseEntity.ok("User registered successfully and activation email sent.");
+            return ResponseEntity.ok("{\"message\": \"User registered successfully and activation email sent.\"}");
         } catch (MessagingException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("User registered but failed to send activation email");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"error\": \"User registered but failed to send activation email\"}");
         }
     }
+    
 
     @PostMapping("/signupSuperAdmin")
     public ResponseEntity<?> registerSuperAdmin(@RequestBody SignUpDto signUpDto){
@@ -184,31 +184,33 @@ public class AuthController {
     public ResponseEntity<?> requestResetPassword(@RequestParam("email") String email) {
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
-            return ResponseEntity.badRequest().body("User with this email does not exist.");
+            return ResponseEntity.badRequest().body("{\"error\": \"User with this email does not exist.\"}");
         }
         String resetToken = UUID.randomUUID().toString();
         user.setResetToken(resetToken);
         userRepository.save(user);
         try {
             mailService.sendResetPasswordEmail(user.getEmail(), user.getFirstName() + " " + user.getLastName(), resetToken);
-            return ResponseEntity.ok("Reset password link sent to your email.");
+            return ResponseEntity.ok("{\"message\": \"Reset password link sent to your email.\"}");
         } catch (MessagingException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send reset password email");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"error\": \"Failed to send reset password email\"}");
         }
     }
+
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordDTO request) {
         User user = userRepository.findByResetToken(request.getToken()).orElse(null);
         if (user == null) {
-            return ResponseEntity.badRequest().body("Invalid or expired reset token.");
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Invalid or expired reset token."));
         }
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        user.setResetToken(null); // Clear the token
+        user.setResetToken(null); // Clear the token after use
         userRepository.save(user);
-        
-        return ResponseEntity.ok("Password reset successfully.");
+
+        return ResponseEntity.ok(Collections.singletonMap("message", "Password reset successfully."));
     }
+
 
     @PostMapping("/contacts")
     public ResponseEntity<Contact> createContact(@RequestBody Contact contact) {

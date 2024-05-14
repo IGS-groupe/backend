@@ -5,6 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +22,9 @@ import java.util.List;
 import java.util.UUID;
 
 import com.example.backend.config.JwtService;
+import com.example.backend.dto.ChangePasswordDTO;
 import com.example.backend.dto.SignUpDto;
+import com.example.backend.dto.UserDTO;
 import com.example.backend.entity.Role;
 import com.example.backend.entity.User;
 import com.example.backend.repository.RoleRepository;
@@ -49,12 +53,15 @@ public class UserController {
     @Autowired
     private MailService mailService;
 
-    // build create User REST API
+    @Autowired
+    private final AuthenticationManager authenticationManager;
+
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user){
         User savedUser = userService.createUser(user);
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
+
     @PostMapping("/signupAdmin")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> registerAdmin(@RequestBody SignUpDto signUpDto){
@@ -66,7 +73,6 @@ public class UserController {
             return new ResponseEntity<>("Email is already taken!", HttpStatus.BAD_REQUEST);
         }
 
-        // Create new user's account
         User user = new User();
         user.setFirstName(signUpDto.getFirstName());
         user.setLastName(signUpDto.getLastName());
@@ -88,8 +94,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("User registered but failed to send activation email");
         }
     }
-    // build get user by id REST API
-    // http://localhost:8080/api/users/1
+
     @GetMapping("{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<User> getUserById(@PathVariable("id") Long userId){
@@ -108,8 +113,7 @@ public class UserController {
     public List<User> getUsersWithAdminRole() {
         return userService.getUsersByRole("ROLE_ADMIN");
     }
-    // Build Get All Users REST API
-    // http://localhost:8080/api/users
+
     @GetMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<User>> getAllUsers(){
@@ -117,16 +121,21 @@ public class UserController {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
-    // Build Update User REST API
     @PutMapping("{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
-    // http://localhost:8080/api/users/1
     public ResponseEntity<User> updateUser(@PathVariable("id") Long userId,
-                                           @RequestBody User user){
-        user.setId(userId);
-        User updatedUser = userService.updateUser(user);
+                                           @RequestBody UserDTO userDto) {
+        User existingUser = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        existingUser.setFirstName(userDto.getFirstName());
+        existingUser.setLastName(userDto.getLastName());
+        existingUser.setEmail(userDto.getEmail());
+        existingUser.setPhoneNumber(userDto.getPhoneNumber());
+
+        User updatedUser = userService.updateUser(existingUser);
         return new ResponseEntity<>(updatedUser, HttpStatus.OK);
     }
+
     @PutMapping("/disable/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<String> disableUser(@PathVariable("id") Long userId){
@@ -141,7 +150,26 @@ public class UserController {
         return ResponseEntity.ok("User account disabled successfully.");
     }
 
-    // Build Delete User REST API
+    @PutMapping("/change-password")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordDTO changePasswordDto) {
+        try {
+            String usernameOrEmail = changePasswordDto.getUsernameOrEmail();
+            User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElse(null);
+            if (user == null) {
+                return ResponseEntity.badRequest().body(Collections.singletonMap("message", "User not found."));
+            }
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), changePasswordDto.getPassword()));
+            user.setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
+            userRepository.save(user);
+            return ResponseEntity.badRequest().body(Collections.singletonMap("message","Password updated successfully."));
+
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("message","Incorrect old password."));
+        }
+    }
+
     @DeleteMapping("{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable("id") Long userId){
