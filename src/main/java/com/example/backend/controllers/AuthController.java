@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -35,6 +36,8 @@ import com.example.backend.repository.UserRepository;
 import com.example.backend.services.ContactService;
 import com.example.backend.services.MailService;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 
@@ -69,30 +72,41 @@ public class AuthController {
         String usernameOrEmail = loginDto.getUsernameOrEmail();
         // Find user by username or email
         User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElse(null);
-        // Authenticate the user using the provided credentials
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getUsername(), loginDto.getPassword()));
+        
         if (user == null) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("message", "User not found."));
-            }
+        }
+
+        // Authenticate the user using the provided credentials
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(usernameOrEmail, loginDto.getPassword()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("message", "Invalid credentials"));
+        }
+        
         if (!user.isActive()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                    .body(Collections.singletonMap("message", "Account is disabled."));
-            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("message", "Account is disabled."));
+        }
+        
         // Generate JWT token for the authenticated user
         String jwtToken = jwtService.generateToken(user);
         Long userId = user.getId();
-        String fisrtName = user.getFirstName();
+        String firstName = user.getFirstName(); // Corrected typo from 'fisrtName' to 'firstName'
         String lastName = user.getLastName();
-        // Return the authentication response with a custom message based on the user's role
+        Set<String> roles = user.getRoles().stream()
+                                .map(role -> role.getName())
+                                .collect(Collectors.toSet());
+        
+        // Return the authentication response with user details and roles
         Map<String, Object> response = new HashMap<>();
-            response.put("message","User registered successfully");
-            response.put("userId",userId);
-            response.put("fisrtName",fisrtName);
-            response.put("lastName",lastName);
-            response.put("token",jwtToken);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-
+        response.put("message", "User authenticated successfully");
+        response.put("userId", userId);
+        response.put("firstName", firstName); // Corrected key from 'fisrtName'
+        response.put("lastName", lastName);
+        response.put("roles", roles); // Changed from 'role' to 'roles' to reflect multiple roles may exist
+        response.put("token", jwtToken);
+        
+        return ResponseEntity.ok(response); // Changed from CREATED to OK for a standard login operation
     }
     
 
