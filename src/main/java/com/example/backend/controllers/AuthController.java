@@ -1,7 +1,9 @@
 package com.example.backend.controllers;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,12 +38,17 @@ import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.services.ContactService;
 import com.example.backend.services.MailService;
+import com.example.backend.services.TokenBlacklistService;
+
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @RequiredArgsConstructor
@@ -66,7 +74,11 @@ public class AuthController {
     
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-
+    
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
+    // private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginDto loginDto) {
         String usernameOrEmail = loginDto.getUsernameOrEmail();
@@ -229,6 +241,16 @@ public class AuthController {
         return ResponseEntity.ok(Collections.singletonMap("message", "Password reset successfully."));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().body("Invalid Authorization header.");
+        }
+
+        String jwt = authHeader.substring(7); // Extract JWT from header
+        tokenBlacklistService.blacklistToken(jwt);
+        return ResponseEntity.ok("Logout successful.");
+    }
 
     @PostMapping("/contacts")
     public ResponseEntity<Contact> createContact(@RequestBody Contact contact) {
