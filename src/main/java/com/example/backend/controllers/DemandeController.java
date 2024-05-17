@@ -99,10 +99,10 @@ public class DemandeController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> updateState(@PathVariable Long id, @RequestBody Map<String, String> etat) {
         try {
-            AnalysisStatus status = AnalysisStatus.valueOf(etat.get("etat"));
+            AnalysisStatus status = AnalysisStatus.valueOf(etat.get("etat").toUpperCase());
             demandeService.updateState(id, status);
             Demande demande = demandeService.getDemandeByDemandeId(id);
-            mailService.sendStatusEmail(demande.getCourrielsSupplementaires(), etat.get("etat"));
+            mailService.sendStatusEmail(demande.getCourrielsSupplementaires(),status);
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Demande updated successfully");
             return ResponseEntity.ok(response);

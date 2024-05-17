@@ -6,8 +6,10 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import jakarta.mail.MessagingException; // Correct import
-import jakarta.mail.internet.MimeMessage; // Correct import
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+
+import com.example.backend.entity.AnalysisStatus;  // Import the enum
 
 @Service
 public class MailService {
@@ -40,26 +42,27 @@ public class MailService {
     }
 
     public void sendResetPasswordEmail(String toEmail, String userName, String resetToken) throws MessagingException {
-    MimeMessage message = mailSender.createMimeMessage();
-    MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-    helper.setFrom(fromMail);
-    helper.setTo(toEmail);
-    helper.setSubject("Reset your password for IGS");
+        helper.setFrom(fromMail);
+        helper.setTo(toEmail);
+        helper.setSubject("Reset your password for IGS");
 
-    String resetUrl = "http://localhost:4200/account/updatePassword?token=" + resetToken; // Adjust the domain accordingly
-    String content = "<h1>Hello " + userName + ",</h1>" +
-                    "<p>You have requested a reset of your password for the account associated with this email.</p>" +
-                    "<p>Please click on the link below to reset your password:</p>" +
-                    "<a href='" + resetUrl + "'>Reset my password</a>" +
-                    "<p>If you did not request a reset, please ignore this email.</p>" +
-                    "<p>Kind regards,</p>" +
-                    "<p>IGS Team</p>";
+        String resetUrl = "http://localhost:4200/account/updatePassword?token=" + resetToken; // Adjust the domain accordingly
+        String content = "<h1>Hello " + userName + ",</h1>" +
+                        "<p>You have requested a reset of your password for the account associated with this email.</p>" +
+                        "<p>Please click on the link below to reset your password:</p>" +
+                        "<a href='" + resetUrl + "'>Reset my password</a>" +
+                        "<p>If you did not request a reset, please ignore this email.</p>" +
+                        "<p>Kind regards,</p>" +
+                        "<p>IGS Team</p>";
 
-    helper.setText(content, true);
-    mailSender.send(message);
+        helper.setText(content, true);
+        mailSender.send(message);
     }
-    public void sendStatusEmail(String toEmail, String status) throws MessagingException {
+
+    public void sendStatusEmail(String toEmail, AnalysisStatus status) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
@@ -67,46 +70,14 @@ public class MailService {
         helper.setTo(toEmail);
         helper.setSubject("Status of your request - IGS");
 
-        String content = generateEmailContent(status);
+        String content = "<h1>Hello,</h1>" +
+                         "<p>" + status.getDescription() + " " + status.getSymbol() + "</p>" +
+                         "<p>For more information, please visit our portal or contact us directly.</p>" +
+                         "<p>Kind regards,</p>" +
+                         "<p>IGS Team</p>";
+
         helper.setText(content, true); // true to send HTML
 
         mailSender.send(message);
-    }
-
-    private String generateEmailContent(String status) {
-        String content = "<h1>Hello,</h1>";
-
-        switch (status.toLowerCase()) {
-            case "request pending":
-                content += "<p>Your analysis request has been submitted and is <strong>pending acceptance</strong>.</p>";
-                break;
-            case "partial results":
-                content += "<p>The <strong>partial results</strong> of your analysis are available.</p>";
-                break;
-            case "sample rejected":
-                content += "<p>Unfortunately, your sample has been <strong>rejected</strong>.</p>";
-                break;
-            case "norm exceedance":
-                content += "<p>Your sample shows an <strong>exceedance of standards</strong>.</p>";
-                break;
-            case "analysis in progress":
-                content += "<p>Your sample has been <strong>received at the laboratory</strong> and is being analyzed.</p>";
-                break;
-            case "complete results":
-                content += "<p>The <strong>complete results</strong> of your analysis are available.</p>";
-                break;
-            case "not potable":
-                content += "<p>The analysis indicates that the sample is <strong>not potable</strong>.</p>";
-                break;
-            default:
-                content += "<p>There is an unexpected issue with your sample. Please contact us.</p>";
-                break;
-        }
-
-        content += "<p>For more information, please visit our portal or contact us directly.</p>";
-        content += "<p>Kind regards,</p>";
-        content += "<p>IGS Team</p>";
-
-        return content;
     }
 }
