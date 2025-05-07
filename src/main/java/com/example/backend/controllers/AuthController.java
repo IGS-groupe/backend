@@ -32,12 +32,14 @@ import com.example.backend.dto.LoginDto;
 import com.example.backend.dto.ResetPasswordDTO;
 import com.example.backend.dto.SignUpDto;
 import com.example.backend.entity.Contact;
+import com.example.backend.entity.News;
 import com.example.backend.entity.Role;
 import com.example.backend.entity.User;
 import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.services.ContactService;
 import com.example.backend.services.MailService;
+import com.example.backend.services.NewsService;
 import com.example.backend.services.TokenBlacklistService;
 
 import java.util.UUID;
@@ -71,7 +73,9 @@ public class AuthController {
 
     @Autowired
     private ContactService contactService;
-    
+    @Autowired
+    private NewsService newsService;
+
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     
@@ -256,5 +260,9 @@ public class AuthController {
     public ResponseEntity<Contact> createContact(@RequestBody Contact contact) {
         Contact savedContact = contactService.saveContact(contact);
         return ResponseEntity.ok(savedContact);
+    }
+    @GetMapping("/news")
+    public List<News> getAllNews() {
+        return newsService.getAllNews();
     }
 }
