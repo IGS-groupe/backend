@@ -13,9 +13,11 @@ public class CorsConfiguration {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:4200","http://localhost:4400","http://localhost:4500","http://localhost:4600") // Add your frontend URL here
+                        .allowedOrigins("http://localhost:4200", "http://localhost:4400", "http://localhost:4500", "http://localhost:4600")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");
+                        .allowedHeaders("*")
+                        .allowCredentials(true) // ✅ Important for file uploads
+                        .maxAge(3600);
             }
         };
     }

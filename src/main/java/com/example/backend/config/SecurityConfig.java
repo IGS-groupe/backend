@@ -25,12 +25,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable()) // ✅ CSRF is disabled
             .authorizeHttpRequests(requests -> requests
-                .requestMatchers("/api/auth/*", "/uploads/**") // ✅ Allow access to images
-                .permitAll()
-                .anyRequest()
-                .authenticated())
+                .requestMatchers("/api/auth/**", "/uploads/**").permitAll() // ✅ Allow uploads access
+                .anyRequest().authenticated())
             .sessionManagement(management -> management
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider)

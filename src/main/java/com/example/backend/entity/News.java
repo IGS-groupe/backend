@@ -1,34 +1,40 @@
 package com.example.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.*;
-
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "news")
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // ✅ Add this
 public class News {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    
+    @Column(nullable = false)
     private String title;
-
-    private LocalDate date;
-
-    @Column(unique = true)
+    
+    @Column(nullable = false, unique = true)
     private String slug;
-
+    
+    @Column(nullable = false)
+    private LocalDate date;
+    
     @Column(columnDefinition = "TEXT")
     private String content;
-
-    @ManyToOne
+    
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "image_id")
-    private Image image; // stored path or URL to the uploaded image
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // ✅ Add this too
+    private Image image;
 }

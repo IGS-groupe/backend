@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.backend.config.JwtService;
 import com.example.backend.dto.LoginDto;
+import com.example.backend.dto.NewsDTO;
 import com.example.backend.dto.ResetPasswordDTO;
 import com.example.backend.dto.SignUpDto;
 import com.example.backend.entity.Contact;
@@ -262,7 +263,7 @@ public class AuthController {
         return ResponseEntity.ok(savedContact);
     }
     @GetMapping("/news")
-    public List<News> getAllNews() {
+    public List<NewsDTO> getAllNews() {
         return newsService.getAllNews();
     }
 }
