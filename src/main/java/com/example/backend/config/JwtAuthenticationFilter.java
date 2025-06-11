@@ -38,30 +38,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String userEmail;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("❌ No Authorization header or bad format.");
             filterChain.doFilter(request, response);
             return;
         }
 
         jwt = authHeader.substring(7);
-        // ! To do extract user email fro jwt token;
         userEmail = jwtService.extractUsername(jwt);
+        System.out.println("🔍 Extracted email: " + userEmail);
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // ? Get user details from the database if user email is not null
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            if (jwtService.isTokenValid(jwt, userDetails)&& !tokenBlacklistService.isTokenBlacklisted(jwt)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities());
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
-        }
-        // ?Pass to the next filter
-        filterChain.doFilter(request, response);
+            boolean tokenValid = jwtService.isTokenValid(jwt, userDetails);
+            boolean blacklisted = tokenBlacklistService.isTokenBlacklisted(jwt);
 
+            System.out.println("✅ Token valid: " + tokenValid);
+            System.out.println("🚫 Token blacklisted: " + blacklisted);
+
+            if (tokenValid && !blacklisted) {
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            } else {
+                System.out.println("❌ Token invalid or blacklisted.");
+            }
+        } else {
+            System.out.println("⛔ Email is null or already authenticated.");
+        }
+
+        filterChain.doFilter(request, response);
     }
 
 }

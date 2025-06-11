@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.example.backend.entity.AnalysisStatus;
 import com.example.backend.entity.Demande;
 
 import jakarta.transaction.Transactional;
@@ -23,4 +24,5 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
     @Modifying
     @Query("UPDATE Demande d SET d.etat = :etat WHERE d.demandeId = :demandeId")
     void updateState(@Param("demandeId") Long demandeId, @Param("etat") String etat);
+    long countByEtat(AnalysisStatus etat);
 }

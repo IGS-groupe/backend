@@ -30,7 +30,7 @@ public class DemandeController {
     private final MailService mailService;
 
     @PostMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> createDemande(@RequestBody DemandeDTO demandeDTO) {
         try {
             Demande demande = new Demande();

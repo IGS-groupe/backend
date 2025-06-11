@@ -12,25 +12,30 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
+    private final JwtAuthenticationEntryPoint authenticationEntryPoint; // 👈 Add this
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
-            .csrf(csrf -> csrf.disable()) // ✅ CSRF is disabled
-            .authorizeHttpRequests(requests -> requests
-                .requestMatchers("/api/auth/**", "/uploads/**").permitAll() // ✅ Allow uploads access
-                .anyRequest().authenticated())
-            .sessionManagement(management -> management
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .cors().and()
+            .csrf().disable()
+            .exceptionHandling()
+                .authenticationEntryPoint(authenticationEntryPoint) // 👈 Register here
+            .and()
+            .authorizeHttpRequests()
+                .requestMatchers("/api/auth/**", "/uploads/**").permitAll()
+                .anyRequest().authenticated()
+            .and()
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
             .authenticationProvider(authenticationProvider)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
