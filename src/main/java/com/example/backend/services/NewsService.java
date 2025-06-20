@@ -10,7 +10,7 @@ import java.util.List;
 public interface NewsService {
     News createNews(News news, MultipartFile image) throws IOException;
     List<NewsDTO> getAllNews();
-    News getNewsBySlug(String slug);
+    NewsDTO getNewsBySlug(String slug);
     News getNewsById(Long id);
     News updateNews(Long id, News news, MultipartFile image) throws IOException;
     void deleteNews(Long id);

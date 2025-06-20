@@ -77,6 +77,22 @@ public class NewsController {
     public List<NewsDTO> getAllNews() {
         return newsService.getAllNews();
     }
+    @GetMapping("/slug/{slug}")
+    // @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> getNewsBySlug(@PathVariable String slug) {
+        try {
+            NewsDTO newsDTO = newsService.getNewsBySlug(slug);
+            if (newsDTO != null) {
+                return ResponseEntity.ok(newsDTO);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // Log dans la console
+            return ResponseEntity.status(500).body("Erreur lors de la récupération de la news : " + e.getMessage());
+        }
+    }
+
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")

@@ -40,6 +40,22 @@ public class NewsServiceImpl implements NewsService {
         
         return newsRepository.save(news);
     }
+    @Override
+    @Transactional(readOnly = true)
+    public NewsDTO getNewsBySlug(String slug) {
+        News news = newsRepository.findBySlug(slug)
+                .orElseThrow(() -> new RuntimeException("News not found with slug: " + slug));
+
+        return new NewsDTO(
+                news.getId(),
+                news.getTitle(),
+                news.getSlug(),
+                news.getContent(),
+                news.getDate(),
+                news.getImage() != null ? news.getImage().getUrl() : null
+        );
+    }
+
 
     @Override
     @Transactional
@@ -92,13 +108,13 @@ public class NewsServiceImpl implements NewsService {
     }
     
     // ✅ Implement missing getNewsBySlug method
-    @Override
-    public News getNewsBySlug(String slug) {
-        // Assuming you have this method in your repository
-        // If not, we'll need to implement it or use a query method
-        return newsRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("News not found with slug: " + slug));
-    }
+    // @Override
+    // public News getNewsBySlug(String slug) {
+    //     // Assuming you have this method in your repository
+    //     // If not, we'll need to implement it or use a query method
+    //     return newsRepository.findBySlug(slug)
+    //             .orElseThrow(() -> new RuntimeException("News not found with slug: " + slug));
+    // }
 
     private Image saveImageFile(MultipartFile file) throws IOException {
         // Fix for the null type mismatch
