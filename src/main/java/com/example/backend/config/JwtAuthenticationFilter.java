@@ -38,33 +38,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String userEmail;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("❌ No Authorization header or bad format.");
+            System.out.println("❌ No Authorization header or bad format for path: " + request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(jwt);
-        System.out.println("🔍 Extracted email: " + userEmail);
+        try {
+            jwt = authHeader.substring(7);
+            userEmail = jwtService.extractUsername(jwt);
+            System.out.println("🔍 Extracted email: " + userEmail + " for path: " + request.getRequestURI());
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            boolean tokenValid = jwtService.isTokenValid(jwt, userDetails);
-            boolean blacklisted = tokenBlacklistService.isTokenBlacklisted(jwt);
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+                
+                if (userDetails == null) {
+                    System.out.println("❌ User not found: " + userEmail);
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                
+                boolean tokenValid = jwtService.isTokenValid(jwt, userDetails);
+                boolean blacklisted = tokenBlacklistService.isTokenBlacklisted(jwt);
 
-            System.out.println("✅ Token valid: " + tokenValid);
-            System.out.println("🚫 Token blacklisted: " + blacklisted);
+                System.out.println("✅ Token valid: " + tokenValid);
+                System.out.println("🚫 Token blacklisted: " + blacklisted);
+                System.out.println("👤 User enabled: " + userDetails.isEnabled());
 
-            if (tokenValid && !blacklisted) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (tokenValid && !blacklisted && userDetails.isEnabled()) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    System.out.println("✅ User authenticated successfully: " + userEmail);
+                } else {
+                    System.out.println("❌ Authentication failed - Token invalid: " + !tokenValid + 
+                                     ", Blacklisted: " + blacklisted + 
+                                     ", User disabled: " + !userDetails.isEnabled());
+                }
             } else {
-                System.out.println("❌ Token invalid or blacklisted.");
+                System.out.println("⛔ Email is null or already authenticated for: " + userEmail);
             }
-        } else {
-            System.out.println("⛔ Email is null or already authenticated.");
+        } catch (Exception e) {
+            System.out.println("❌ JWT Authentication error: " + e.getMessage());
+            e.printStackTrace();
         }
 
         filterChain.doFilter(request, response);
