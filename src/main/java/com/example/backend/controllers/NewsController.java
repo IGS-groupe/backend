@@ -12,11 +12,15 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.backend.dto.NewsDTO;
 import com.example.backend.entity.News;
 import com.example.backend.services.NewsService;
+
+import jakarta.transaction.Transactional;
+
 import java.time.LocalDate;
 import java.io.IOException;
 import java.util.List;
 
 @RestController
+@Transactional
 @RequestMapping("/api/news")
 public class NewsController {
 
@@ -93,26 +97,56 @@ public class NewsController {
         }
     }
 
-
+    @GetMapping("/{id}")
+    // @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')") // optional
+    public ResponseEntity<?> getNewsById(@PathVariable Long id) {
+        try {
+            NewsDTO newsDTO = newsService.getNewsByIdDTO(id);
+            return ResponseEntity.ok(newsDTO);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body("Erreur lors de la récupération de la news par ID : " + e.getMessage());
+        }
+    }
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<News> updateNews(
+    public ResponseEntity<?> updateNews(
             @PathVariable Long id,
             @RequestParam("title") String title,
             @RequestParam("slug") String slug,
             @RequestParam("date") String date,
             @RequestParam("content") String content,
-            @RequestPart(value = "image", required = false) MultipartFile image
-    ) throws IOException {
-        
-        News updated = News.builder()
-                .title(title)
-                .slug(slug)
-                .date(LocalDate.parse(date))
-                .content(content)
-                .build();
-        return ResponseEntity.ok(newsService.updateNews(id, updated, image));
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        try {
+            News updated = News.builder()
+                    .title(title)
+                    .slug(slug)
+                    .date(LocalDate.parse(date))
+                    .content(content)
+                    .build();
+
+            News savedNews = newsService.updateNews(id, updated, image);
+
+            // Convert to DTO
+            NewsDTO dto = new NewsDTO(
+                    savedNews.getId(),
+                    savedNews.getTitle(),
+                    savedNews.getSlug(),
+                    savedNews.getContent(),
+                    savedNews.getDate(),
+                    savedNews.getImage() != null ? savedNews.getImage().getUrl() : null
+            );
+
+            return ResponseEntity.ok(dto);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erreur : " + e.getMessage());
+        }
     }
+
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")

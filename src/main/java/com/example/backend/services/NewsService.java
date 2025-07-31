@@ -11,7 +11,7 @@ public interface NewsService {
     News createNews(News news, MultipartFile image) throws IOException;
     List<NewsDTO> getAllNews();
     NewsDTO getNewsBySlug(String slug);
-    News getNewsById(Long id);
+    NewsDTO getNewsByIdDTO(Long id);
     News updateNews(Long id, News news, MultipartFile image) throws IOException;
     void deleteNews(Long id);
 }

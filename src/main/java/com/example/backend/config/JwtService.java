@@ -18,58 +18,65 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
-	private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    // Token validity: 1 day
+    private static final long TOKEN_VALIDITY = 1000 * 60 * 60 * 24;
 
-	public String generateToken(
-			Map<String, Object> extraClaims, UserDetails userDetails) {
-		return Jwts
-				.builder()
-				.setClaims(extraClaims)
-				.setSubject(userDetails.getUsername())
-				.setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis() + 10000 * 60 * 24))
-				.signWith(getSignInKey(), SignatureAlgorithm.HS256)
-				.compact();
-	}
+    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+        return buildToken(extraClaims, userDetails, TOKEN_VALIDITY);
+    }
 
-	public String generateToken(UserDetails userDetails) {
-		return generateToken(new HashMap<>(), userDetails);
-	}
+    public String generateToken(UserDetails userDetails) {
+        return generateToken(new HashMap<>(), userDetails);
+    }
 
-	public Boolean isTokenValid(String token, UserDetails userDetails) {
-		final String username = extractUsername(token);
-		return (username.equals(userDetails.getUsername())) && !IsTokenExpired(token);
-	}
+    public String generateRefreshToken(UserDetails userDetails) {
+        // Refresh token valid for 7 days
+        return buildToken(new HashMap<>(), userDetails, TOKEN_VALIDITY * 7);
+    }
 
-	private boolean IsTokenExpired(String token) {
-		return extractExpiration(token).before(new Date());
-	}
+    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
+        return Jwts.builder()
+                .setClaims(extraClaims)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
 
-	private Date extractExpiration(String token) {
-		return extractClaim(token, Claims::getExpiration);
-	}
+    public Boolean isTokenValid(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    }
 
-	public String extractUsername(String token) {
-		return extractClaim(token, Claims::getSubject);
-	}
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
 
-	public <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
-		final Claims claims = extractAllClaims(token);
-		return claimResolver.apply(claims);
-	}
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
 
-	public Claims extractAllClaims(String token) {
-		return Jwts
-				.parserBuilder()
-				.setSigningKey(getSignInKey())
-				.build()
-				.parseClaimsJws(token)
-				.getBody();
-	}
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
 
-	private Key getSignInKey() {
-		byte[] keyByte = Decoders.BASE64.decode(SECRET_KEY);
-		return Keys.hmacShaKeyFor(keyByte);
-	}
+    public <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimResolver.apply(claims);
+    }
 
+    public Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    private Key getSignInKey() {
+        byte[] keyByte = Decoders.BASE64.decode(SECRET_KEY);
+        return Keys.hmacShaKeyFor(keyByte);
+    }
 }

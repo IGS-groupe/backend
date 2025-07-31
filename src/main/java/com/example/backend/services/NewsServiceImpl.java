@@ -102,11 +102,20 @@ public class NewsServiceImpl implements NewsService {
 
     // ✅ Implement missing getNewsById method
     @Override
-    public News getNewsById(Long id) {
-        return newsRepository.findById(id)
+    @Transactional(readOnly = true)
+    public NewsDTO getNewsByIdDTO(Long id) {
+        News news = newsRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("News not found with id: " + id));
+
+        return new NewsDTO(
+                news.getId(),
+                news.getTitle(),
+                news.getSlug(),
+                news.getContent(),
+                news.getDate(),
+                news.getImage() != null ? news.getImage().getUrl() : null
+        );
     }
-    
     // ✅ Implement missing getNewsBySlug method
     // @Override
     // public News getNewsBySlug(String slug) {

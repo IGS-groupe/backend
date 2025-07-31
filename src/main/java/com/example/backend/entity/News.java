@@ -33,8 +33,8 @@ public class News {
     @Column(columnDefinition = "TEXT")
     private String content;
     
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "image_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // ✅ Add this too
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Image image;
 }
