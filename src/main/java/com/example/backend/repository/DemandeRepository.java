@@ -25,4 +25,8 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
     @Query("UPDATE Demande d SET d.etat = :etat WHERE d.demandeId = :demandeId")
     void updateState(@Param("demandeId") Long demandeId, @Param("etat") String etat);
     long countByEtat(AnalysisStatus etat);
+    
+    // New method for many-to-many relationship
+    @Query("SELECT d FROM Demande d JOIN d.clients c WHERE c.id = :clientId")
+    List<Demande> findByClientsId(@Param("clientId") Long clientId);
 }
