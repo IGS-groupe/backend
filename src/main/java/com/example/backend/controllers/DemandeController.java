@@ -39,19 +39,34 @@ public class DemandeController {
             demande.setCourrielsSupplementaires(demandeDTO.getCourrielsSupplementaires());
             demande.setBonDeCommande(demandeDTO.getBonDeCommande());
             demande.setUnEchantillon(demandeDTO.isUnEchantillon());
-            demande.setLangueDuCertificat(Langue.valueOf(demandeDTO.getLangueDuCertificat().toUpperCase()));  // Assuming Langue is also an enum
+            demande.setLangueDuCertificat(Langue.valueOf(demandeDTO.getLangueDuCertificat().toUpperCase()));
             demande.setCommentairesInternes(demandeDTO.getCommentairesInternes());
-            demande.setEtat(AnalysisStatus.REQUEST_SUBMITTED);  // Set initial state using enum
-            demande.setUser(userService.getUserById(demandeDTO.getUserId()));  // Assuming getUserById is correctly implemented
+            demande.setEtat(AnalysisStatus.REQUEST_SUBMITTED);
+            
+            // Set main user (for backward compatibility)
+            demande.setUser(userService.getUserById(demandeDTO.getUserId()));
+            
+            // Add multiple clients if provided
+            if (demandeDTO.getClientIds() != null && !demandeDTO.getClientIds().isEmpty()) {
+                for (Long clientId : demandeDTO.getClientIds()) {
+                    demande.addClient(userService.getUserById(clientId));
+                }
+            } else if (demandeDTO.getUserId() != null) {
+                // If no multiple clients specified, add the main user as client
+                demande.addClient(userService.getUserById(demandeDTO.getUserId()));
+            }
 
             Demande savedDemande = demandeService.saveDemande(demande);
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Demande created successfully!");
             response.put("demandeId", savedDemande.getDemandeId());
+            response.put("clientsCount", savedDemande.getClients().size());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid language or status specified.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating demande: " + e.getMessage());
         }
     }
 
@@ -116,5 +131,39 @@ public class DemandeController {
     public ResponseEntity<String> deleteDemande(@PathVariable Long id) {
         demandeService.deleteDemande(id);
         return ResponseEntity.ok("Demande successfully deleted!");
+    }
+    
+    // New endpoints for managing multiple clients
+    @PostMapping("/{demandeId}/clients/{clientId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> addClientToDemande(@PathVariable Long demandeId, @PathVariable Long clientId) {
+        try {
+            demandeService.addClientToDemande(demandeId, clientId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Client added to demande successfully!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error adding client to demande: " + e.getMessage());
+        }
+    }
+    
+    @DeleteMapping("/{demandeId}/clients/{clientId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> removeClientFromDemande(@PathVariable Long demandeId, @PathVariable Long clientId) {
+        try {
+            demandeService.removeClientFromDemande(demandeId, clientId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Client removed from demande successfully!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error removing client from demande: " + e.getMessage());
+        }
+    }
+    
+    @GetMapping("/client/{clientId}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<List<Demande>> getDemandesByClientId(@PathVariable Long clientId) {
+        List<Demande> demandes = demandeService.getDemandesByClientId(clientId);
+        return ResponseEntity.ok(demandes);
     }
 }
