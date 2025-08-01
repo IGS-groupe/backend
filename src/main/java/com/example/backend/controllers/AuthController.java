@@ -265,6 +265,19 @@ public class AuthController {
     @PostMapping("/contacts")
     public ResponseEntity<Contact> createContact(@RequestBody Contact contact) {
         Contact savedContact = contactService.saveContact(contact);
+        
+        // Send acknowledgment email in English
+        try {
+            mailService.sendContactFormAcknowledgment(
+                contact.getEmail(), 
+                contact.getFirstName(), 
+                contact.getLastName()
+            );
+        } catch (MessagingException e) {
+            // Log the error but don't fail the contact creation
+            System.err.println("Failed to send contact acknowledgment email: " + e.getMessage());
+        }
+        
         return ResponseEntity.ok(savedContact);
     }
     @GetMapping("/news")
