@@ -68,16 +68,38 @@ public class MailService {
 
         helper.setFrom(fromMail);
         helper.setTo(toEmail);
-        helper.setSubject("Status of your request - IGS");
+        helper.setSubject("Status Update - IGS Analysis Request");
 
         String content = "<h1>Hello,</h1>" +
-                         "<p>" + status.getDescription() + " " + status.getSymbol() + "</p>" +
+                         "<p>We would like to inform you about the status update of your analysis request:</p>" +
+                         "<p><strong>Status:</strong> " + status.getDescription() + " " + status.getSymbol() + "</p>" +
                          "<p>For more information, please visit our portal or contact us directly.</p>" +
-                         "<p>Kind regards,</p>" +
+                         "<p>Best regards,</p>" +
                          "<p>IGS Team</p>";
 
         helper.setText(content, true); // true to send HTML
 
+        mailSender.send(message);
+    }
+
+    public void sendContactFormAcknowledgment(String toEmail, String firstName, String lastName) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setFrom(fromMail);
+        helper.setTo(toEmail);
+        helper.setSubject("Thank you for contacting IGS - Message Received");
+
+        String content = "<h1>Dear " + firstName + " " + lastName + ",</h1>" +
+                         "<p>Thank you for contacting Impact Global Solutions (IGS). We have successfully received your message and will review it shortly.</p>" +
+                         "<p>Our team will get back to you within 24-48 hours during business days. If your inquiry is urgent, please feel free to contact us directly by phone.</p>" +
+                         "<p>We appreciate your interest in our services and look forward to assisting you.</p>" +
+                         "<p>Best regards,</p>" +
+                         "<p>IGS Customer Service Team</p>" +
+                         "<hr>" +
+                         "<p><small>This is an automated confirmation email. Please do not reply to this message.</small></p>";
+
+        helper.setText(content, true);
         mailSender.send(message);
     }
 }
