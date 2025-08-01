@@ -6,9 +6,11 @@ import org.springframework.stereotype.Service;
 import com.example.backend.entity.AnalysisStatus;
 import com.example.backend.entity.Demande;
 import com.example.backend.entity.Echantillon;
+import com.example.backend.entity.User;
 import com.example.backend.exception.DemandeNotFoundException;
 import com.example.backend.repository.DemandeRepository;
 import com.example.backend.repository.EchantillonRepository;
+import com.example.backend.repository.UserRepository;
 
 import lombok.AllArgsConstructor;
 
@@ -22,6 +24,7 @@ public class DemandeServiceImpl implements DemandeService {
 
     private  DemandeRepository demandeRepository;
     private  EchantillonRepository echantillonRepository;
+    private  UserRepository userRepository;
     @Override
     public Demande saveDemande(Demande demande) {
         return demandeRepository.save(demande);
@@ -53,6 +56,13 @@ public class DemandeServiceImpl implements DemandeService {
             existingDemande.setLangueDuCertificat(demande.getLangueDuCertificat());
             existingDemande.setCommentairesInternes(demande.getCommentairesInternes());
             existingDemande.setUser(demande.getUser());
+            
+            // Update clients if provided
+            if (demande.getClients() != null && !demande.getClients().isEmpty()) {
+                existingDemande.getClients().clear();
+                existingDemande.getClients().addAll(demande.getClients());
+            }
+            
             return demandeRepository.save(existingDemande);
         } else {
             throw new DemandeNotFoundException("Demande with ID " + id + " not found");
@@ -76,6 +86,42 @@ public class DemandeServiceImpl implements DemandeService {
         List<Echantillon> echantillons = echantillonRepository.findAllByDemandeId(id);
         echantillonRepository.deleteAll(echantillons);
         demandeRepository.deleteById(id);
+    }
+    
+    // New methods for managing multiple clients
+    @Override
+    public void addClientToDemande(Long demandeId, Long clientId) {
+        Optional<Demande> optionalDemande = demandeRepository.findById(demandeId);
+        Optional<User> optionalClient = userRepository.findById(clientId);
+        
+        if (optionalDemande.isPresent() && optionalClient.isPresent()) {
+            Demande demande = optionalDemande.get();
+            User client = optionalClient.get();
+            demande.addClient(client);
+            demandeRepository.save(demande);
+        } else {
+            throw new DemandeNotFoundException("Demande or Client not found");
+        }
+    }
+    
+    @Override
+    public void removeClientFromDemande(Long demandeId, Long clientId) {
+        Optional<Demande> optionalDemande = demandeRepository.findById(demandeId);
+        Optional<User> optionalClient = userRepository.findById(clientId);
+        
+        if (optionalDemande.isPresent() && optionalClient.isPresent()) {
+            Demande demande = optionalDemande.get();
+            User client = optionalClient.get();
+            demande.removeClient(client);
+            demandeRepository.save(demande);
+        } else {
+            throw new DemandeNotFoundException("Demande or Client not found");
+        }
+    }
+    
+    @Override
+    public List<Demande> getDemandesByClientId(Long clientId) {
+        return demandeRepository.findByClientsId(clientId);
     }
     
     // Add more methods if needed
