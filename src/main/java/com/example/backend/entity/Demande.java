@@ -3,6 +3,8 @@ package com.example.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.util.Set;
+import java.util.HashSet;
 
 @Data
 @Entity
@@ -39,8 +41,28 @@ public class Demande {
     @Column(name = "CommentairesInternes", columnDefinition = "TEXT")
     private String commentairesInternes;
     
+    // Many-to-Many relationship with Users (clients)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "demande_clients",
+        joinColumns = @JoinColumn(name = "demande_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> clients = new HashSet<>();
+    
+    // Keep the original user field for backward compatibility (main client)
     @ManyToOne
     @JoinColumn(name = "userId", nullable = false)
     private User user;
+    
+    // Helper methods
+    public void addClient(User client) {
+        this.clients.add(client);
+    }
+    
+    public void removeClient(User client) {
+        this.clients.remove(client);
+    }
+    
     // Getters and setters
 }
