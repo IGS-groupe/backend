@@ -270,8 +270,7 @@ public class AuthController {
         try {
             mailService.sendContactFormAcknowledgment(
                 contact.getEmail(), 
-                contact.getFirstName(), 
-                contact.getLastName()
+                contact.getName()
             );
         } catch (MessagingException e) {
             // Log the error but don't fail the contact creation

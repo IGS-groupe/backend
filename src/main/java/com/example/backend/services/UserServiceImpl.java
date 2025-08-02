@@ -50,14 +50,8 @@ public class UserServiceImpl implements UserService{
     }
     @Override
     public User updateUser(User user) {
-        User existingUser = userRepository.findById(user.getId()).get();
-        existingUser.setFirstName(user.getFirstName());
-        existingUser.setLastName(user.getLastName());
-        existingUser.setUsername(user.getUsername());
-        existingUser.setEmail(user.getEmail());
-        existingUser.setGenre(user.getGenre());
-        User updatedUser = userRepository.save(existingUser);
-        return updatedUser;
+        // No need to re-fetch and overwrite
+        return userRepository.save(user);
     }
 
     @Override

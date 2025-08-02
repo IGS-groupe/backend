@@ -1,6 +1,7 @@
 package com.example.backend.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,12 +16,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import com.example.backend.config.FileUploadUtil;
 import com.example.backend.config.JwtService;
 import com.example.backend.dto.ChangePasswordDTO;
 import com.example.backend.dto.SignUpDto;
@@ -32,29 +36,39 @@ import com.example.backend.repository.UserRepository;
 import com.example.backend.services.ContactService;
 import com.example.backend.services.MailService;
 import com.example.backend.services.UserService;
-
+import lombok.extern.slf4j.Slf4j;
 import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 
+@Slf4j
 @RestController
-@AllArgsConstructor
 @RequestMapping("/api/users")
 public class UserController {
-    private UserService userService;
-     @Autowired
-    private UserRepository userRepository;
 
-    @Autowired
-    private RoleRepository roleRepository;
+    @Value("${app.base-url}")
+    private String baseUrl;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private MailService mailService;
-
-    @Autowired
+    private final UserService userService;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final MailService mailService;
     private final AuthenticationManager authenticationManager;
+
+    public UserController(UserService userService,
+                          UserRepository userRepository,
+                          RoleRepository roleRepository,
+                          PasswordEncoder passwordEncoder,
+                          MailService mailService,
+                          AuthenticationManager authenticationManager) {
+        this.userService = userService;
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.mailService = mailService;
+        this.authenticationManager = authenticationManager;
+    }
+
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user){
@@ -122,20 +136,48 @@ public class UserController {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
-    @PutMapping("{id}")
+    @PutMapping(value = "{id}", consumes = "application/json")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<User> updateUser(@PathVariable("id") Long userId,
-                                           @RequestBody UserDTO userDto) {
-        User existingUser = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-        existingUser.setFirstName(userDto.getFirstName());
-        existingUser.setLastName(userDto.getLastName());
-        existingUser.setEmail(userDto.getEmail());
-        existingUser.setPhoneNumber(userDto.getPhoneNumber());
+    public ResponseEntity<User> updateUserJson(
+            @PathVariable Long id,
+            @RequestBody User user) {
+
+        User existingUser = userService.getUserById(id);
+        existingUser.setFirstName(user.getFirstName());
+        existingUser.setLastName(user.getLastName());
+        existingUser.setPhoneNumber(user.getPhoneNumber());
+        existingUser.setEmail(user.getEmail());
 
         User updatedUser = userService.updateUser(existingUser);
-        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        return ResponseEntity.ok(updatedUser);
     }
+
+    @PutMapping(value = "{id}/with-file", consumes = "multipart/form-data")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<User> updateUserWithFile(
+            @PathVariable Long id,
+            @RequestPart("firstName") String firstName,
+            @RequestPart("lastName") String lastName,
+            @RequestPart("phoneNumber") String phoneNumber,
+            @RequestPart("email") String email,
+            @RequestPart(value = "logo", required = false) MultipartFile logo) {
+
+        User existingUser = userService.getUserById(id);
+        existingUser.setFirstName(firstName);
+        existingUser.setLastName(lastName);
+        existingUser.setPhoneNumber(phoneNumber);
+        existingUser.setEmail(email);
+
+        if (logo != null && !logo.isEmpty()) {
+            String relativePath = FileUploadUtil.saveUserImage(id, logo);
+            String imagePath = baseUrl + relativePath;
+            existingUser.setImageUrl(imagePath);
+        }
+
+        User updatedUser = userService.updateUser(existingUser);
+        return ResponseEntity.ok(updatedUser);
+    }
+
 
     @PutMapping("/disable/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")

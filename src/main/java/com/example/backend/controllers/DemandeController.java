@@ -9,6 +9,7 @@ import com.example.backend.dto.DemandeDTO;
 import com.example.backend.entity.AnalysisStatus;
 import com.example.backend.entity.Demande;
 import com.example.backend.entity.Langue;
+import com.example.backend.entity.User;
 import com.example.backend.services.DemandeService;
 import com.example.backend.services.MailService;
 import com.example.backend.services.UserService;
@@ -39,36 +40,48 @@ public class DemandeController {
             demande.setCourrielsSupplementaires(demandeDTO.getCourrielsSupplementaires());
             demande.setBonDeCommande(demandeDTO.getBonDeCommande());
             demande.setUnEchantillon(demandeDTO.isUnEchantillon());
-            demande.setLangueDuCertificat(Langue.valueOf(demandeDTO.getLangueDuCertificat().toUpperCase()));
+            demande.setLangueDuCertificat(
+                Langue.valueOf(demandeDTO.getLangueDuCertificat().toUpperCase())
+            );
             demande.setCommentairesInternes(demandeDTO.getCommentairesInternes());
             demande.setEtat(AnalysisStatus.REQUEST_SUBMITTED);
-            
-            // Set main user (for backward compatibility)
-            demande.setUser(userService.getUserById(demandeDTO.getUserId()));
-            
-            // Add multiple clients if provided
-            if (demandeDTO.getClientIds() != null && !demandeDTO.getClientIds().isEmpty()) {
-                for (Long clientId : demandeDTO.getClientIds()) {
-                    demande.addClient(userService.getUserById(clientId));
+
+            // Add clients (must have at least one client)
+            if (demandeDTO.getClientIds() == null || demandeDTO.getClientIds().isEmpty()) {
+                return ResponseEntity
+                    .badRequest()
+                    .body("At least one client must be specified");
+            }
+
+            for (Long clientId : demandeDTO.getClientIds()) {
+                User client = userService.getUserById(clientId);
+                if (client == null) {
+                    return ResponseEntity
+                        .badRequest()
+                        .body("Client with ID " + clientId + " not found");
                 }
-            } else if (demandeDTO.getUserId() != null) {
-                // If no multiple clients specified, add the main user as client
-                demande.addClient(userService.getUserById(demandeDTO.getUserId()));
+                demande.addClient(client);
             }
 
             Demande savedDemande = demandeService.saveDemande(demande);
+
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Demande created successfully!");
             response.put("demandeId", savedDemande.getDemandeId());
             response.put("clientsCount", savedDemande.getClients().size());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid language or status specified.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid language or status specified.");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating demande: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error creating demande: " + e.getMessage());
         }
     }
+
 
 
     @GetMapping("/{demandeId}")
@@ -83,9 +96,15 @@ public class DemandeController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<List<Demande>> getAllDemandes() {
-        List<Demande> demandes = demandeService.getAllDemandes();
-        return ResponseEntity.ok(demandes);
+    public ResponseEntity<?> getAllDemandes() {
+        try {
+            List<Demande> demandes = demandeService.getAllDemandes();
+            return ResponseEntity.ok(demandes);
+        } catch (Exception ex) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while fetching demandes: " + ex.getMessage());
+        }
     }
 
     @GetMapping("/user/{userId}")
@@ -94,6 +113,8 @@ public class DemandeController {
         List<Demande> demandes = demandeService.getDemandesByUserId(userId);
         return ResponseEntity.ok(demandes);
     }
+
+
     
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")

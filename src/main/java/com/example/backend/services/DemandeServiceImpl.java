@@ -41,8 +41,9 @@ public class DemandeServiceImpl implements DemandeService {
     }
     @Override
     public List<Demande> getDemandesByUserId(Long userId) {
-        return demandeRepository.findByUserId(userId);
+        return demandeRepository.findAllByUserId(userId);
     }
+
     @Override
     public Demande updateDemande(Long id, Demande demande) {
         Optional<Demande> optionalDemande = demandeRepository.findById(id);
@@ -55,7 +56,6 @@ public class DemandeServiceImpl implements DemandeService {
             existingDemande.setUnEchantillon(demande.isUnEchantillon());
             existingDemande.setLangueDuCertificat(demande.getLangueDuCertificat());
             existingDemande.setCommentairesInternes(demande.getCommentairesInternes());
-            existingDemande.setUser(demande.getUser());
             
             // Update clients if provided
             if (demande.getClients() != null && !demande.getClients().isEmpty()) {

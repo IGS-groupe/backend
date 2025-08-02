@@ -16,9 +16,8 @@ import jakarta.transaction.Transactional;
 
 public interface DemandeRepository extends JpaRepository<Demande, Long> {
     Demande findByDemandeId(Long demandeId);
-    @Query("SELECT d FROM Demande d WHERE d.user.id = :userId")
-    List<Demande> findAllByUserId(@Param("userId") Long userId);    
-    List<Demande> findByUserId(Long userId);
+    @Query("SELECT d FROM Demande d JOIN d.clients c WHERE c.id = :userId")
+    List<Demande> findAllByUserId(@Param("userId") Long userId);
     Optional<Demande> findByDemandePour(String nom);
     @Transactional
     @Modifying

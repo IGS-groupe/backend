@@ -4,6 +4,9 @@ package com.example.backend.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.HashSet;
 
 @Data
@@ -42,18 +45,17 @@ public class Demande {
     private String commentairesInternes;
     
     // Many-to-Many relationship with Users (clients)
-    @ManyToMany(fetch = FetchType.LAZY)
+   @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "demande_clients",
-        joinColumns = @JoinColumn(name = "demande_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
+        joinColumns = @JoinColumn(name = "demande_id", referencedColumnName = "DemandeID"),
+        inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id")
     )
+    @JsonIgnore
     private Set<User> clients = new HashSet<>();
+
+
     
-    // Keep the original user field for backward compatibility (main client)
-    @ManyToOne
-    @JoinColumn(name = "userId", nullable = false)
-    private User user;
     
     // Helper methods
     public void addClient(User client) {
