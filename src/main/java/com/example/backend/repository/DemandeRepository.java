@@ -28,4 +28,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
     // New method for many-to-many relationship
     @Query("SELECT d FROM Demande d JOIN d.clients c WHERE c.id = :clientId")
     List<Demande> findByClientsId(@Param("clientId") Long clientId);
+    @Query("SELECT DISTINCT d FROM Demande d JOIN FETCH d.clients WHERE d.etat = :etat")
+    List<Demande> findAllWithClientsByEtat(@Param("etat") AnalysisStatus etat);
+
 }

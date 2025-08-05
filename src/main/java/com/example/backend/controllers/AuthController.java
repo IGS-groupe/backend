@@ -28,12 +28,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.backend.config.JwtService;
+import com.example.backend.dto.DemandeUserDTO;
 import com.example.backend.dto.LoginDto;
 import com.example.backend.dto.NewsDTO;
 import com.example.backend.dto.ResetPasswordDTO;
 import com.example.backend.dto.SignUpDto;
+import com.example.backend.dto.User2DTO;
+import com.example.backend.dto.UserDTO;
 import com.example.backend.entity.AnalysisStatus;
 import com.example.backend.entity.Contact;
+import com.example.backend.entity.Demande;
 import com.example.backend.entity.News;
 import com.example.backend.entity.Role;
 import com.example.backend.entity.User;
@@ -291,30 +295,35 @@ public class AuthController {
         response.put("userCount", count);
         return ResponseEntity.ok(response);
     }
-    @GetMapping("/demandes/count-complete-results")
-    public ResponseEntity<Map<String, Long>> countDemandesWithCompleteResults() {
-        long count = demandeRepository.countByEtat(AnalysisStatus.COMPLETE_RESULTS);
-        Map<String, Long> response = new HashMap<>();
-        response.put("completeResultsCount", count);
-        return ResponseEntity.ok(response);
-    }
-    @GetMapping("/users/by-role")
-    public ResponseEntity<?> getUsersByRole(@RequestParam String role) {
+    @GetMapping("/demandes/complete-results")
+        public ResponseEntity<List<DemandeUserDTO>> getDemandesWithCompleteResults() {
+            List<Demande> demandes = demandeRepository.findAllWithClientsByEtat(AnalysisStatus.COMPLETE_RESULTS);
+
+            List<DemandeUserDTO> response = demandes.stream()
+                .map(d -> new DemandeUserDTO(
+                        d.getDemandeId(),
+                        d.getClients().stream()
+                            .map(u -> new User2DTO(u.getUsername(), u.getImageUrl()))
+                            .collect(Collectors.toList())
+                ))
+                .collect(Collectors.toList());
+
+            return ResponseEntity.ok(response);
+        }
+
+   @GetMapping("/users/by-role")
+    public ResponseEntity<List<Map<String, Object>>> getUsersByRole(@RequestParam String role) {
         List<User> users = userRepository.findByRoles_Name(role);
+
         List<Map<String, Object>> userResponses = users.stream().map(user -> {
             Map<String, Object> userMap = new HashMap<>();
-            userMap.put("id", user.getId());
-            userMap.put("firstName", user.getFirstName());
-            userMap.put("lastName", user.getLastName());
-            userMap.put("email", user.getEmail());
             userMap.put("username", user.getUsername());
-            userMap.put("phoneNumber", user.getPhoneNumber());
-            userMap.put("genre", user.getGenre());
-            userMap.put("roles", user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()));
+            userMap.put("imageUrl", user.getImageUrl());
             return userMap;
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(userResponses);
     }
+
 
 }
