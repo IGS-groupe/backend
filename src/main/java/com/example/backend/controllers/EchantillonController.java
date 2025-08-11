@@ -33,7 +33,7 @@ public class EchantillonController {
     @Autowired
     private ParameterRepository parameterRepository;
     @PostMapping
-    @PreAuthorize("hasRole('USER')")
+     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> saveEchantillon(@RequestBody EchantillonDTO echantillonDTO) {
         try {
             Echantillon echantillon = mapDtoToEntity(echantillonDTO);
@@ -47,7 +47,7 @@ public class EchantillonController {
         }
     }
     @PostMapping("/All/{demandeId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> saveBatchEchantillons(@PathVariable Long demandeId, @RequestBody List<EchantillonDTO> echantillonDTOList) {
         try {
             Demande demande = demandeService.getDemandeByDemandeId(demandeId); // Assume there's a method to fetch Demande

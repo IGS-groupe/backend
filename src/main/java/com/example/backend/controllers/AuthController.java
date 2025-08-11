@@ -20,6 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -287,7 +288,10 @@ public class AuthController {
     public List<NewsDTO> getAllNews() {
         return newsService.getAllNews();
     }
-    
+    @GetMapping("/news/{id}")
+    public NewsDTO getById(@PathVariable Long id) {
+        return newsService.getNewsByIdDTO(id); // ✅ correct name
+    }
     @GetMapping("/users/count-role-user")
     public ResponseEntity<Map<String, Long>> countUsersWithRoleUser() {
         long count = userRepository.countByRoles_Name("ROLE_USER");
