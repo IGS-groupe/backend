@@ -1,12 +1,9 @@
 package com.example.backend.entity;
 
-
 import jakarta.persistence.*;
 import lombok.Data;
 import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.util.HashSet;
 
 @Data
@@ -17,22 +14,22 @@ public class Demande {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "DemandeID")
     private Long demandeId;
-    
+
     @Column(name = "DemandePour")
     private String demandePour;
-    
+
     @Column(name = "EnvoyeAuLaboratoire")
     private String envoyeAuLaboratoire;
-    
+
     @Column(name = "CourrielsSupplementaires", columnDefinition = "TEXT")
     private String courrielsSupplementaires;
-    
+
     @Column(name = "BonDeCommande")
     private String bonDeCommande;
-    
+
     @Column(name = "UnEchantillon")
     private boolean unEchantillon;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(name = "Etat")
     private AnalysisStatus etat;
@@ -40,12 +37,14 @@ public class Demande {
     @Enumerated(EnumType.STRING)
     @Column(name = "LangueDuCertificat")
     private Langue langueDuCertificat;
-    
+
     @Column(name = "CommentairesInternes", columnDefinition = "TEXT")
     private String commentairesInternes;
-    
-    // Many-to-Many relationship with Users (clients)
-   @ManyToMany(fetch = FetchType.LAZY)
+
+    @Column(name = "ExportExcel")
+    private Boolean exportExcel = Boolean.FALSE;
+
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "demande_clients",
         joinColumns = @JoinColumn(name = "demande_id", referencedColumnName = "DemandeID"),
@@ -54,17 +53,6 @@ public class Demande {
     @JsonIgnore
     private Set<User> clients = new HashSet<>();
 
-
-    
-    
-    // Helper methods
-    public void addClient(User client) {
-        this.clients.add(client);
-    }
-    
-    public void removeClient(User client) {
-        this.clients.remove(client);
-    }
-    
-    // Getters and setters
+    public void addClient(User client) { this.clients.add(client); }
+    public void removeClient(User client) { this.clients.remove(client); }
 }

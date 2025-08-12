@@ -12,6 +12,8 @@ import com.example.backend.repository.DemandeRepository;
 import com.example.backend.repository.EchantillonRepository;
 import com.example.backend.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 
 import java.util.List;
@@ -42,6 +44,15 @@ public class DemandeServiceImpl implements DemandeService {
     @Override
     public List<Demande> getDemandesByUserId(Long userId) {
         return demandeRepository.findAllByUserId(userId);
+    }
+    @Override
+    @Transactional
+    public Demande toggleExportExcel(Long demandeId) {
+        Demande d = demandeRepository.findById(demandeId)
+            .orElseThrow(() -> new EntityNotFoundException("Demande not found: " + demandeId));
+
+        d.setExportExcel(!Boolean.TRUE.equals(d.getExportExcel())); // TRUE->false, FALSE/null->true
+        return demandeRepository.save(d);
     }
 
     @Override

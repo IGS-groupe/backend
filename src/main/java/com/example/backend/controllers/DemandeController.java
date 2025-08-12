@@ -114,7 +114,13 @@ public class DemandeController {
         return ResponseEntity.ok(demandes);
     }
 
-
+      // POST /api/demandes/{id}/export-excel/toggle  (toggle state by ID)
+    @PostMapping("/{id}/export-excel/toggle")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Demande> toggleExportExcel(@PathVariable Long id) {
+        Demande updated = demandeService.toggleExportExcel(id);
+        return ResponseEntity.ok(updated);
+    }
     
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")

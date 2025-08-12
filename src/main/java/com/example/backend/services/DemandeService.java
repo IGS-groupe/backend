@@ -18,7 +18,7 @@ public interface DemandeService {
     Demande updateDemande(Long id ,Demande demande);
     void deleteDemande(Long id);
     void updateState(Long demandeId , AnalysisStatus etat);
-    
+    Demande toggleExportExcel(Long demandeId);     
     // New methods for managing multiple clients
     void addClientToDemande(Long demandeId, Long clientId);
     void removeClientFromDemande(Long demandeId, Long clientId);
