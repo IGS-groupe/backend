@@ -29,22 +29,21 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
-            .csrf().disable()
-            .exceptionHandling()
+            .csrf(csrf -> csrf.disable()) // JWT → stateless, CSRF unnecessary
+            .exceptionHandling(eh -> eh
                 .authenticationEntryPoint(authenticationEntryPoint)
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                .accessDeniedHandler((request, response, ex) -> {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"error\": \"Access Denied - Insufficient privileges\"}");
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"error\":\"Access Denied - Insufficient privileges\"}");
                 })
-            .and()
-            .authorizeHttpRequests()
+            )
+            .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/uploads/**").permitAll()
-                .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/api/users/**").hasAnyRole("USER","ADMIN","SUPER_ADMIN")
                 .anyRequest().authenticated()
-            .and()
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            .and()
+            )
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

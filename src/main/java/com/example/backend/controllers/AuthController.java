@@ -11,6 +11,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -60,6 +61,11 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
+
 @Service
 @RequiredArgsConstructor
 @RestController
@@ -94,47 +100,63 @@ public class AuthController {
     private TokenBlacklistService tokenBlacklistService;
     // private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-    @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginDto loginDto) {
-        String usernameOrEmail = loginDto.getUsernameOrEmail();
-        // Find user by username or email
-        User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElse(null);
-        
-        if (user == null) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("message", "User not found."));
+       @PostMapping("/signin")
+        public ResponseEntity<?> authenticateUser(@RequestBody LoginDto loginDto) {
+            String usernameOrEmail = loginDto.getUsernameOrEmail();
+
+            // 1) Load user
+            User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElse(null);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Collections.singletonMap("message", "User not found."));
+            }
+
+            // 2) Check credentials
+            try {
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(usernameOrEmail, loginDto.getPassword())
+                );
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("message", "Invalid credentials"));
+            }
+
+            // 3) Check account status
+            if (!user.isActive()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("message", "Account is disabled."));
+            }
+
+            // 4) Generate JWT and set as HttpOnly cookie
+            String jwtToken = jwtService.generateToken(user);
+
+            ResponseCookie jwtCookie = ResponseCookie.from("jwt", jwtToken)
+                    .httpOnly(true)
+                    // ⚠️ Set to true in production (HTTPS). Keep false for local dev without HTTPS.
+                    .secure(false)
+                    .path("/")
+                    // Lax is fine if frontend and backend share the same site. 
+                    // If you host them on different top-level domains, use "None" AND secure(true).
+                    .sameSite("Lax")
+                    .maxAge(Duration.ofDays(1))
+                    .build();
+
+            // 5) Build response payload WITHOUT token
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("message", "User authenticated successfully");
+            payload.put("userId", user.getId());
+            payload.put("firstName", user.getFirstName());
+            payload.put("lastName", user.getLastName());
+            payload.put("roles", user.getRoles()
+                    .stream()
+                    .map(r -> r.getName())
+                    .collect(Collectors.toSet()));
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                    .body(payload);
         }
 
-        // Authenticate the user using the provided credentials
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(usernameOrEmail, loginDto.getPassword()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("message", "Invalid credentials"));
-        }
-        
-        if (!user.isActive()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("message", "Account is disabled."));
-        }
-        
-        // Generate JWT token for the authenticated user
-        String jwtToken = jwtService.generateToken(user);
-        Long userId = user.getId();
-        String firstName = user.getFirstName(); // Corrected typo from 'fisrtName' to 'firstName'
-        String lastName = user.getLastName();
-        Set<String> roles = user.getRoles().stream()
-                                .map(role -> role.getName())
-                                .collect(Collectors.toSet());
-        
-        // Return the authentication response with user details and roles
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "User authenticated successfully");
-        response.put("userId", userId);
-        response.put("firstName", firstName); // Corrected key from 'fisrtName'
-        response.put("lastName", lastName);
-        response.put("roles", roles); // Changed from 'role' to 'roles' to reflect multiple roles may exist
-        response.put("token", jwtToken);
-        
-        return ResponseEntity.ok(response); // Changed from CREATED to OK for a standard login operation
-    }
     
 
     @PostMapping("/signup")
@@ -256,15 +278,19 @@ public class AuthController {
         return ResponseEntity.ok(Collections.singletonMap("message", "Password reset successfully."));
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().body("Invalid Authorization header.");
-        }
+   @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        ResponseCookie clear = ResponseCookie.from("jwt", "")
+                .httpOnly(true)
+                .secure(false) // true in prod (HTTPS)
+                .path("/")
+                .sameSite("Lax")
+                .maxAge(0) // delete now
+                .build();
 
-        String jwt = authHeader.substring(7); // Extract JWT from header
-        tokenBlacklistService.blacklistToken(jwt);
-        return ResponseEntity.ok("Logout successful.");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clear.toString())
+                .body(Collections.singletonMap("message", "Logged out"));
     }
 
     @PostMapping("/contacts")

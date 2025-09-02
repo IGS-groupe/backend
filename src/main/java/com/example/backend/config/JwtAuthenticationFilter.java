@@ -1,6 +1,8 @@
 package com.example.backend.config;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,6 +17,7 @@ import com.example.backend.services.TokenBlacklistService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -23,67 +26,67 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String COOKIE_NAME = "jwt";
+
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+
     @Autowired
     private TokenBlacklistService tokenBlacklistService;
+
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userEmail;
+        String jwt = resolveTokenFromCookie(request).orElseGet(() -> resolveTokenFromHeader(request));
+        String userEmail = null;
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("❌ No Authorization header or bad format for path: " + request.getRequestURI());
+        if (jwt == null) {
+            // No token anywhere → continue
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            jwt = authHeader.substring(7);
             userEmail = jwtService.extractUsername(jwt);
-            System.out.println("🔍 Extracted email: " + userEmail + " for path: " + request.getRequestURI());
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-                
                 if (userDetails == null) {
-                    System.out.println("❌ User not found: " + userEmail);
                     filterChain.doFilter(request, response);
                     return;
                 }
-                
+
                 boolean tokenValid = jwtService.isTokenValid(jwt, userDetails);
                 boolean blacklisted = tokenBlacklistService.isTokenBlacklisted(jwt);
 
-                System.out.println("✅ Token valid: " + tokenValid);
-                System.out.println("🚫 Token blacklisted: " + blacklisted);
-                System.out.println("👤 User enabled: " + userDetails.isEnabled());
-
                 if (tokenValid && !blacklisted && userDetails.isEnabled()) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    System.out.println("✅ User authenticated successfully: " + userEmail);
-                } else {
-                    System.out.println("❌ Authentication failed - Token invalid: " + !tokenValid + 
-                                     ", Blacklisted: " + blacklisted + 
-                                     ", User disabled: " + !userDetails.isEnabled());
                 }
-            } else {
-                System.out.println("⛔ Email is null or already authenticated for: " + userEmail);
             }
         } catch (Exception e) {
-            System.out.println("❌ JWT Authentication error: " + e.getMessage());
-            e.printStackTrace();
+            // swallow and continue; entry point will handle unauthorized on protected endpoints
         }
 
         filterChain.doFilter(request, response);
     }
 
+    private Optional<String> resolveTokenFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) return Optional.empty();
+        return Arrays.stream(cookies)
+                .filter(c -> COOKIE_NAME.equals(c.getName()))
+                .map(Cookie::getValue)
+                .findFirst();
+    }
+
+    private String resolveTokenFromHeader(HttpServletRequest request) {
+        final String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
+        return authHeader.substring(7);
+    }
 }

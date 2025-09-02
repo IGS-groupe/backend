@@ -19,8 +19,7 @@ import io.jsonwebtoken.security.Keys;
 public class JwtService {
 
     private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
-    // Token validity: 1 day
-    private static final long TOKEN_VALIDITY = 1000 * 60 * 60 * 24;
+    private static final long TOKEN_VALIDITY = 1000L * 60 * 60 * 24; // 1 day
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return buildToken(extraClaims, userDetails, TOKEN_VALIDITY);
@@ -31,7 +30,6 @@ public class JwtService {
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        // Refresh token valid for 7 days
         return buildToken(new HashMap<>(), userDetails, TOKEN_VALIDITY * 7);
     }
 

@@ -135,6 +135,35 @@ public class UserController {
         List<User> users = userService.getAllUsers();
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('CLIENT')")
+    public ResponseEntity<?> getMe(@org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("message", "Not authenticated"));
+        }
+
+        // Find full User entity from DB using username/email from token
+        User user = userRepository.findByUsernameOrEmail(userDetails.getUsername(), userDetails.getUsername())
+                .orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("message", "User not found"));
+        }
+
+        // Build response DTO with safe fields (no password)
+        UserDTO dto = new UserDTO();
+        dto.setId(user.getId());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setEmail(user.getEmail());
+        dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setRoles(user.getRoles().stream().map(Role::getName).toList());
+        dto.setActive(user.isActive());
+
+        return ResponseEntity.ok(dto);
+    }
 
     @PutMapping(value = "{id}", consumes = "application/json")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
