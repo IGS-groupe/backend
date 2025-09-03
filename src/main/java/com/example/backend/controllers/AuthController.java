@@ -41,6 +41,7 @@ import com.example.backend.entity.AnalysisStatus;
 import com.example.backend.entity.Contact;
 import com.example.backend.entity.Demande;
 import com.example.backend.entity.News;
+import com.example.backend.entity.ProjectCard;
 import com.example.backend.entity.Role;
 import com.example.backend.entity.User;
 import com.example.backend.repository.DemandeRepository;
@@ -49,6 +50,7 @@ import com.example.backend.repository.UserRepository;
 import com.example.backend.services.ContactService;
 import com.example.backend.services.MailService;
 import com.example.backend.services.NewsService;
+import com.example.backend.services.ProjectCardService;
 import com.example.backend.services.TokenBlacklistService;
 
 import java.util.UUID;
@@ -95,7 +97,7 @@ public class AuthController {
 
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    
+    private final ProjectCardService service;
     @Autowired
     private TokenBlacklistService tokenBlacklistService;
     // private static final Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -354,6 +356,9 @@ public class AuthController {
 
         return ResponseEntity.ok(userResponses);
     }
-
+    @GetMapping("/project-cards")
+    public List<ProjectCard> list() {
+        return service.list();
+    }
 
 }

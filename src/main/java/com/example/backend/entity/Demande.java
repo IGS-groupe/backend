@@ -52,6 +52,9 @@ public class Demande {
     )
     @JsonIgnore
     private Set<User> clients = new HashSet<>();
+    @OneToMany(mappedBy = "demande", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore 
+    private java.util.Set<DemandeExcelFile> excelFiles = new java.util.HashSet<>();
 
     public void addClient(User client) { this.clients.add(client); }
     public void removeClient(User client) { this.clients.remove(client); }
