@@ -3,6 +3,7 @@ package com.example.backend.controllers;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -163,13 +164,25 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignUpDto signUpDto) {
-        if (userRepository.existsByUsername(signUpDto.getUsername())) {
-            return ResponseEntity.badRequest().body("{\"error\": \"Username is already taken!\"}");
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        if (userRepository.existsByUsernameIgnoreCase(signUpDto.getUsername())) {
+            errors.put("username", "Username is already taken.");
         }
-        if (userRepository.existsByEmail(signUpDto.getEmail())) {
-            return ResponseEntity.badRequest().body("{\"error\": \"Email is already taken!\"}");
+        if (userRepository.existsByEmailIgnoreCase(signUpDto.getEmail())) {
+            errors.put("email", "Email is already taken.");
         }
-    
+        if (userRepository.existsByPhoneNumber(signUpDto.getPhoneNumber())) {
+            errors.put("phoneNumber", "Phone number is already in use.");
+        }
+
+        if (!errors.isEmpty()) {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("message", "Duplicate values.");
+            body.put("errors", errors);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
         // Create new user's account
         User user = new User();
         user.setFirstName(signUpDto.getFirstName());
@@ -179,20 +192,30 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
         user.setPhoneNumber(signUpDto.getPhoneNumber());
         user.setGenre(signUpDto.getGenre());
-    
-        Role roles = roleRepository.findByName("ROLE_USER").orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-        user.setRoles(Collections.singleton(roles));
+
+        Role role = roleRepository.findByName("ROLE_USER")
+            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+        user.setRoles(Collections.singleton(role));
         user.setActivationToken(UUID.randomUUID().toString());
         userRepository.save(user);
-    
+
         // Send activation email
         try {
-            mailService.sendActivationEmail(user.getEmail(), user.getFirstName() + " " + user.getLastName(), user.getActivationToken());
-            return ResponseEntity.ok("{\"message\": \"User registered successfully and activation email sent.\"}");
+            mailService.sendActivationEmail(
+                user.getEmail(),
+                user.getFirstName() + " " + user.getLastName(),
+                user.getActivationToken()
+            );
+            return ResponseEntity.ok(Map.of(
+                "message", "User registered successfully and activation email sent.",
+                "activationRequired", true
+            ));
         } catch (MessagingException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"error\": \"User registered but failed to send activation email\"}");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "User registered but failed to send activation email"));
         }
     }
+
     
 
     @PostMapping("/signupSuperAdmin")
