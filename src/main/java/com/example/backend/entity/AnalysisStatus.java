@@ -1,12 +1,12 @@
 package com.example.backend.entity;
 public enum AnalysisStatus {
-    REQUEST_SUBMITTED("Demande d'analyse transmise et en attente d'acceptation", "✔"),
-    PARTIAL_RESULTS("Résultats partiels", "⚪"),
-    SAMPLE_REJECTED("Échantillon rejeté", "❌"),
-    EXCEEDS_NORM("Dépassement de norme", "!"),
-    RECEIVED_IN_PROGRESS("Reçu au laboratoire, en cours d'analyse", "🕒"),
-    COMPLETE_RESULTS("Résultats complets", "✔"),
-    NOT_POTABLE("Non-Potable", "‼");
+    REQUEST_SUBMITTED("Analysis request submitted and awaiting acceptance", "✔"),
+    PARTIAL_RESULTS("Partial results", "⚪"),
+    SAMPLE_REJECTED("Sample rejected", "❌"),
+    EXCEEDS_NORM("Exceeds standard", "!"),
+    RECEIVED_IN_PROGRESS("Received at laboratory, analysis in progress", "🕒"),
+    COMPLETE_RESULTS("Complete results", "✔"),
+    NOT_POTABLE("Not potable", "‼");
 
     private final String description;
     private final String symbol;
